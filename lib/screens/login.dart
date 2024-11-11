@@ -21,16 +21,28 @@ class _LoginScreenState extends State<LoginScreen> {
     PermissionStatus status = await Permission.camera.request();
     if (status.isGranted) {
       print("Permesso fotocamera concesso");
-    } else {
+    } else if(status.isPermanentlyDenied){
+      print("Permesso fotocamera negato per sempre");
+      openAppSettings();
+    }else{
       print("Permesso fotocamera negato");
+    }
+  }
+  void _openAppSettings() async {
+    bool opened = await openAppSettings();
+    if (opened) {
+      print("Impostazioni aperte");
+    } else {
+      print("Impossibile aprire le impostazioni");
     }
   }
 
   void _onScan(BarcodeCapture barcodeCapture) {
     final String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
 
-    if (scannedData == 'yourLoginToken') {
-      // Sostituisci 'yourLoginToken' con il token che vuoi usare per il login
+    if (scannedData == 'franco') {
+
+
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
@@ -44,9 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    cameraController.dispose(); // Rilascia il controller della fotocamera
+    cameraController.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: MobileScanner(
                 controller: cameraController,
                 onDetect: (BarcodeCapture barcodeCapture) {
-                  _onScan(barcodeCapture); // Passa l'oggetto BarcodeCapture al metodo
+                  _onScan(barcodeCapture);
                 },
               ),
             ),
