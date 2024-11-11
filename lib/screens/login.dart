@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '/screens/dashboard.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -10,8 +11,23 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   MobileScannerController cameraController = MobileScannerController();
 
-  void _onScan(Barcode barcode, MobileScannerArguments? args) {
-    final String scannedData = barcode.rawValue ?? "Unknown";
+  @override
+  void initState() {
+    super.initState();
+    _requestCameraPermission();
+  }
+
+  void _requestCameraPermission() async {
+    PermissionStatus status = await Permission.camera.request();
+    if (status.isGranted) {
+      print("Permesso fotocamera concesso");
+    } else {
+      print("Permesso fotocamera negato");
+    }
+  }
+
+  void _onScan(BarcodeCapture barcodeCapture) {
+    final String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
 
     if (scannedData == 'yourLoginToken') {
       // Sostituisci 'yourLoginToken' con il token che vuoi usare per il login
@@ -20,11 +36,16 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (context) => HomePage()),
       );
     } else {
-      // Se il codice QR non è valido
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Codice QR non valido')),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    cameraController.dispose(); // Rilascia il controller della fotocamera
+    super.dispose();
   }
 
   @override
@@ -57,16 +78,12 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 300,
               child: MobileScanner(
                 controller: cameraController,
-                onDetect: _onScan, // Funzione chiamata quando un codice viene scansionato
+                onDetect: (BarcodeCapture barcodeCapture) {
+                  _onScan(barcodeCapture); // Passa l'oggetto BarcodeCapture al metodo
+                },
               ),
             ),
             SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                cameraController.toggleTorch(); // Per attivare/disattivare la torcia
-              },
-              child: Text('Accendi/Spegni Torcia'),
-            ),
           ],
         ),
       ),
