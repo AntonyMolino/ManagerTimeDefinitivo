@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '/screens/dashboard.dart';
-
-
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -9,20 +8,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  MobileScannerController cameraController = MobileScannerController();
 
-  void _login() {
-    String email = _emailController.text;
-    String password = _passwordController.text;
-    if (email == '' && password == '') {
+  void _onScan(Barcode barcode, MobileScannerArguments? args) {
+    final String scannedData = barcode.rawValue ?? "Unknown";
+
+    if (scannedData == 'yourLoginToken') {
+      // Sostituisci 'yourLoginToken' con il token che vuoi usare per il login
       Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage(),
-          ));
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
     } else {
+      // Se il codice QR non è valido
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Credenziali errate')),
+        SnackBar(content: Text('Codice QR non valido')),
       );
     }
   }
@@ -48,26 +48,24 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
+            Text(
+              'Scansiona il codice QR per accedere:',
+              style: TextStyle(fontSize: 18),
             ),
             SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              obscureText: true, // Per nascondere la password
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
+            Container(
+              height: 300,
+              child: MobileScanner(
+                controller: cameraController,
+                onDetect: _onScan, // Funzione chiamata quando un codice viene scansionato
               ),
             ),
             SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _login,
-              child: Text('Accedi'),
+              onPressed: () {
+                cameraController.toggleTorch(); // Per attivare/disattivare la torcia
+              },
+              child: Text('Accendi/Spegni Torcia'),
             ),
           ],
         ),
