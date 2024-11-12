@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 
-class HomePage extends StatelessWidget{
+class HomePage extends StatelessWidget {
   final String codiceFiscale;
-
 
   const HomePage({super.key, required this.codiceFiscale});
 
@@ -38,9 +37,9 @@ class HomePage extends StatelessWidget{
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WelcomeSection(codiceFiscale: codiceFiscale,),
+            WelcomeSection(codiceFiscale: codiceFiscale),
             SizedBox(height: 20),
-            EntryExitSection(codiceFiscale: codiceFiscale,),
+            EntryExitSection(codiceFiscale: codiceFiscale),
             SizedBox(height: 20),
             HoursWorkedSection(),
           ],
@@ -52,56 +51,94 @@ class HomePage extends StatelessWidget{
 
 // Sezione di benvenuto
 class WelcomeSection extends StatelessWidget {
-
   final String codiceFiscale;
   const WelcomeSection({super.key, required this.codiceFiscale});
 
+  Future<Map<String, dynamic>> getDipendente() async {
+    var dipendente;
+    List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+    for (var record in dipendenti) {
+      if (record['codiceFiscale'] == codiceFiscale) {
+        dipendente = record;
+        break;
+      }
+    }
+    return dipendente ?? {};
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.indigo,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.indigo.withOpacity(0.2),
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              Text(
-                'Benvenuto, $codiceFiscale',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: getDipendente(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Errore: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            var dipendente = snapshot.data!;
+            return Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.indigo,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.indigo.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
+                  ),
+                ],
               ),
-              SizedBox(height: 5),
-              Text(
-                'Buona giornata di lavoro!',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Benvenuto ${dipendente['nome']} ${dipendente['cognome']}",
+                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Buona giornata di lavoro!',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  Icon(Icons.person, color: Colors.white, size: 40),
+                ],
               ),
-            ],
-          ),
-          Icon(Icons.person, color: Colors.white, size: 40),
-        ],
-      ),
+            );
+          } else {
+            return Center(child: Text('Nessun dipendente trovato'));
+          }
+        }
+        return SizedBox.shrink();
+      },
     );
   }
 }
 
 // Sezione per ingresso e uscita
 class EntryExitSection extends StatelessWidget {
+  final String codiceFiscale;
 
-  String? codiceFiscale;
-  EntryExitSection({required codiceFiscale});
+  EntryExitSection({required this.codiceFiscale});
+
+  Future<Map<String, dynamic>> getDipendente() async {
+    var dipendente;
+    List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+    for (var record in dipendenti) {
+      if (record['codiceFiscale'] == codiceFiscale) {
+        dipendente = record;
+        break;
+      }
+    }
+    return dipendente ?? {}; // Restituisci un oggetto vuoto se non trovato
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,45 +163,54 @@ class EntryExitSection extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () async {
-                  //await DatabaseHelper.insertDipendente("Antonio", "Molino", "anto22032005@hotmail.com", "franco");
-
-                  print(codiceFiscale);
-                  List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
-                  print('dipendenti $dipendenti');
-
-
-                },
-                icon: Icon(Icons.login,
-                  color: Colors.white,
-                ),
-                label: Text('Entrata'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Funzionalità per registrare l'uscita
-                },
-                icon: Icon(Icons.logout,
-                  color: Colors.white,
-
-                ),
-                label: Text('Uscita'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.redAccent,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-              ),
-            ],
+          // Usa FutureBuilder per gestire i dati asincroni del dipendente
+          FutureBuilder<Map<String, dynamic>>(
+            future: getDipendente(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator()); // Mostra un loader mentre aspettiamo i dati
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Errore: ${snapshot.error}'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(child: Text('Dipendente non trovato'));
+              } else {
+                // I dati del dipendente sono pronti
+                var dipendente = snapshot.data!;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        // Registrazione dell'entrata
+                        await DatabaseHelper.insertEntrata(dipendente['id']);
+                        print("Entrata registrata per ${dipendente['id']}");
+                      },
+                      icon: Icon(Icons.login, color: Colors.white),
+                      label: Text('Entrata'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.indigo,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        // Registrazione dell'uscita
+                        await DatabaseHelper.insertUscita(dipendente['id']);
+                        print("Uscita registrata per ${dipendente['codiceFiscale']}");
+                      },
+                      icon: Icon(Icons.logout, color: Colors.white),
+                      label: Text('Uscita'),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.redAccent,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                    ),
+                  ],
+                );
+              }
+            },
           ),
           SizedBox(height: 10),
           Text(
@@ -176,6 +222,7 @@ class EntryExitSection extends StatelessWidget {
     );
   }
 }
+
 
 // Sezione per le ore lavorate (con grafico circolare)
 class HoursWorkedSection extends StatelessWidget {
@@ -220,7 +267,7 @@ class HoursWorkedSection extends StatelessWidget {
                       ),
                     ),
                     PieChartSectionData(
-                      color: Colors.grey[300],
+                      color: Colors.grey[300]!,
                       value: 25,
                       title: '25%',
                       radius: 50,

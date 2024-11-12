@@ -74,6 +74,8 @@ class DatabaseHelper {
     });
   }
 
+
+
   static Future<void> insertUscita(int dipendenteId) async {
     final db = await getDatabase;
     await db.insert('uscite', {
