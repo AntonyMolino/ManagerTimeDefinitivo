@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import '/screens/dashboard.dart';
+import 'package:managertime/db/DatabaseHelper.dart';
+import 'package:managertime/screens/dashboard.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -10,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   MobileScannerController cameraController = MobileScannerController();
+
 
   @override
   void initState() {

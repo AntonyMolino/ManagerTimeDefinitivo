@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:managertime/db/DatabaseHelper.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -115,7 +116,8 @@ class EntryExitSection extends StatelessWidget {
             children: [
               ElevatedButton.icon(
                 onPressed: () {
-                  // Funzionalità per registrare l'entrata
+
+
                 },
                 icon: Icon(Icons.login,
                   color: Colors.white,

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:managertime/db/DatabaseHelper.dart';
 
 import 'screens/login.dart';
 
-void main() {
+void main() async {
   runApp(MyApp());
+  DatabaseHelper db = DatabaseHelper();
+  await db.database;
 }
 
 class MyApp extends StatelessWidget {
