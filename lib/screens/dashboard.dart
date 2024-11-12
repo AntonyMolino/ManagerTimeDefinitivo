@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatelessWidget{
+  var codiceFiscale;
+
+
+  HomePage({required this.codiceFiscale});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,9 +38,9 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WelcomeSection(),
+            WelcomeSection(codiceFiscale: codiceFiscale,),
             SizedBox(height: 20),
-            EntryExitSection(),
+            EntryExitSection(codiceFiscale: codiceFiscale,),
             SizedBox(height: 20),
             HoursWorkedSection(),
           ],
@@ -47,6 +52,11 @@ class HomePage extends StatelessWidget {
 
 // Sezione di benvenuto
 class WelcomeSection extends StatelessWidget {
+
+  String? codiceFiscale;
+  WelcomeSection({required codiceFiscale});
+
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -68,8 +78,9 @@ class WelcomeSection extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
               Text(
-                'Benvenuto, Nome Cognome',
+                'Benvenuto, $codiceFiscale',
                 style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 5),
@@ -88,6 +99,10 @@ class WelcomeSection extends StatelessWidget {
 
 // Sezione per ingresso e uscita
 class EntryExitSection extends StatelessWidget {
+
+  String? codiceFiscale;
+  EntryExitSection({required codiceFiscale});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -115,7 +130,12 @@ class EntryExitSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
+                  //await DatabaseHelper.insertDipendente("Antonio", "Molino", "anto22032005@hotmail.com", "franco");
+
+                  print(codiceFiscale);
+                  List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+                  print('dipendenti $dipendenti');
 
 
                 },

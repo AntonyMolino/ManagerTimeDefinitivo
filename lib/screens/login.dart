@@ -40,21 +40,28 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _onScan(BarcodeCapture barcodeCapture) {
-    final String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
+  Future<void> _onScan(BarcodeCapture barcodeCapture) async {
+    final String scannedData = barcodeCapture.barcodes.first.rawValue ??
+        "Unknown";
+    //await DatabaseHelper.insertDipendente("Antonio", "Molino", "anto22032005@hotmail.com", "franco");
+    //await DatabaseHelper.insertDipendente("Andrea", "Bucelli", "", "topo");
+    List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+    for (var record in dipendenti) {
+      var codiceFiscale = record['codiceFiscale'];
+      if (scannedData == codiceFiscale) {
 
-    if (scannedData == 'franco') {
-
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Codice QR non valido')),
-      );
-    }
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => HomePage(codiceFiscale: scannedData,)),
+        );
+        break;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Codice QR non valido')),
+        );
+      }
+  }
   }
 
   @override
