@@ -5,8 +5,7 @@ import 'screens/login.dart';
 
 void main() async {
   runApp(MyApp());
-  DatabaseHelper db = DatabaseHelper();
-  await db.database;
+  DatabaseHelper.getDatabase;
 }
 
 class MyApp extends StatelessWidget {

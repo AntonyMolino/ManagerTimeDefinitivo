@@ -9,13 +9,13 @@ class DatabaseHelper {
 
   DatabaseHelper._internal();
 
-  Future<Database> get database async {
+   static Future<Database> get getDatabase async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
+   static Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'company_database.db');
     print(path);
 
@@ -26,7 +26,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> _onCreate(Database db, int version) async {
+  static Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE Dipendenti (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,34 +55,40 @@ class DatabaseHelper {
     ''');
   }
   //INSERT
-  Future<void> insertDipendente(Map<String, dynamic> dipendente) async {
-    final db = await database;
-    await db.insert('Dipendenti', dipendente);
+  static Future<void> insertDipendente(String nome , String cognome , String email, String codiceFiscale) async {
+    final db = await getDatabase;
+    await db.insert('Dipendenti', {
+      'nome': nome,
+      'cognome': cognome,
+      'email': email,
+      'codiceFiscale': codiceFiscale,
+      'hash': "",
+    });
   }
 
-  Future<void> insertEntrata(int dipendenteId) async {
-    final db = await database;
+  static Future<void> insertEntrata(int dipendenteId) async {
+    final db = await getDatabase;
     await db.insert('entrate', {
       'dipendenteEntr': dipendenteId,
       'data': DateTime.now().toString(),
     });
   }
 
-  Future<void> insertUscita(int dipendenteId) async {
-    final db = await database;
+  static Future<void> insertUscita(int dipendenteId) async {
+    final db = await getDatabase;
     await db.insert('uscite', {
       'dipendenteUsc': dipendenteId,
       'data': DateTime.now().toString(),
     });
   }
   //GET
-  Future<List<Map<String, dynamic>>> getDipendenti() async {
-    final db = await database;
+  static Future<List<Map<String, dynamic>>> getDipendenti() async {
+    final db = await getDatabase;
     return await db.query('Dipendenti');
 
   }
-  Future<List<Map<String, dynamic>>> getDipendentibyCodiceFiscale(String codiceFiscale) async {
-    final db = await database;
+  static Future<List<Map<String, dynamic>>> getDipendentibyCodiceFiscale(String codiceFiscale) async {
+    final db = await getDatabase;
     return await db.query(
       'Dipendenti',
       where: 'codiceFiscale = ?',
@@ -90,8 +96,8 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getEntrate(int dipendenteId) async {
-    final db = await database;
+  static Future<List<Map<String, dynamic>>> getEntrate(int dipendenteId) async {
+    final db = await getDatabase;
     return await db.query(
       'entrate',
       where: 'dipendenteEntr = ?',
@@ -99,8 +105,8 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getUscite(int dipendenteId) async {
-    final db = await database;
+  static Future<List<Map<String, dynamic>>> getUscite(int dipendenteId) async {
+    final db = await getDatabase;
     return await db.query(
       'uscite',
       where: 'dipendenteUsc = ?',
