@@ -3,10 +3,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 
 class HomePage extends StatelessWidget{
-  var codiceFiscale;
+  final String codiceFiscale;
 
 
-  HomePage({required this.codiceFiscale});
+  const HomePage({super.key, required this.codiceFiscale});
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +53,8 @@ class HomePage extends StatelessWidget{
 // Sezione di benvenuto
 class WelcomeSection extends StatelessWidget {
 
-  String? codiceFiscale;
-  WelcomeSection({required codiceFiscale});
+  final String codiceFiscale;
+  const WelcomeSection({super.key, required this.codiceFiscale});
 
 
   @override

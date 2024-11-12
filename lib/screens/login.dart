@@ -49,11 +49,11 @@ class _LoginScreenState extends State<LoginScreen> {
     for (var record in dipendenti) {
       var codiceFiscale = record['codiceFiscale'];
       if (scannedData == codiceFiscale) {
-
+        print(codiceFiscale);
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => HomePage(codiceFiscale: scannedData,)),
+              builder: (context) => HomePage(codiceFiscale: codiceFiscale,)),
         );
         break;
       } else {
