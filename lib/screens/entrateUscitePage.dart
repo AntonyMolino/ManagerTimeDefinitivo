@@ -64,7 +64,8 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
                 return Card(
                   child: ListTile(
-                    title: Text("Data: ${DateFormat('dd-MM-yyyy').format(entrataDateTime)}"),
+
+                    title: Text("Data: ${DateFormat('dd-MM-yyyy').format(entrataDateTime!)}"),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

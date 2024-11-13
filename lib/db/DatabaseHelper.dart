@@ -85,6 +85,29 @@ class DatabaseHelper {
       'ora' : DateTime.now().toString().substring(11, 16),
     });
   }
+  //UPDATE
+  static Future<void> updateEntrataTime(int id, String ora) async {
+    final db = await getDatabase;
+    await db.update(
+      'entrate',
+      {'ora': ora},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+
+  static Future<void> updateUscitaTime(int id, String ora) async {
+    final db = await getDatabase;
+    await db.update(
+      'uscite',
+      {'ora': ora},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+
   //GET
   static Future<List<Map<String, dynamic>>> getDipendenti() async {
     final db = await getDatabase;
