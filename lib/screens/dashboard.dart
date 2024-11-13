@@ -19,7 +19,8 @@ class HomePage extends StatelessWidget {
             fit: BoxFit.contain,
           ),
         ),
-        title: Text('Sistema di Registrazione'),
+        title: Text('Sistema di Registrazione',
+        style: TextStyle(color: Colors.white),),
         centerTitle: true,
         backgroundColor: Colors.indigo,
         actions: [
