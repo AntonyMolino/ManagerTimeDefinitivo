@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 
 class HomePage extends StatelessWidget {
@@ -19,8 +19,7 @@ class HomePage extends StatelessWidget {
             fit: BoxFit.contain,
           ),
         ),
-        title: Text('Sistema di Registrazione',
-        style: TextStyle(color: Colors.white),),
+        title: Text('Sistema di Registrazione', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
         actions: [
@@ -50,7 +49,6 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// Sezione di benvenuto
 class WelcomeSection extends StatelessWidget {
   final String codiceFiscale;
   const WelcomeSection({super.key, required this.codiceFiscale});
@@ -123,7 +121,6 @@ class WelcomeSection extends StatelessWidget {
   }
 }
 
-// Sezione per ingresso e uscita
 class EntryExitSection extends StatelessWidget {
   final String codiceFiscale;
 
@@ -164,27 +161,34 @@ class EntryExitSection extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           SizedBox(height: 10),
-          // Usa FutureBuilder per gestire i dati asincroni del dipendente
           FutureBuilder<Map<String, dynamic>>(
             future: getDipendente(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator()); // Mostra un loader mentre aspettiamo i dati
+                return Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
                 return Center(child: Text('Errore: ${snapshot.error}'));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return Center(child: Text('Dipendente non trovato'));
               } else {
-                // I dati del dipendente sono pronti
                 var dipendente = snapshot.data!;
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     ElevatedButton.icon(
                       onPressed: () async {
-                        // Registrazione dell'entrata
-                        await DatabaseHelper.insertEntrata(dipendente['id']);
-                        print("Entrata registrata per ${dipendente['codiceFiscale']}");
+                        bool alreadyRegistered = await DatabaseHelper.checkEntrata(dipendente['id']);
+                        if (alreadyRegistered) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Entrata già registrata per oggi')),
+                          );
+                        } else {
+                          await DatabaseHelper.insertEntrata(dipendente['id']);
+                          print("Entrata registrata per ${dipendente['codiceFiscale']}");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Entrata registrata con successo!')),
+                          );
+                        }
                       },
                       icon: Icon(Icons.login, color: Colors.white),
                       label: Text('Entrata'),
@@ -196,9 +200,18 @@ class EntryExitSection extends StatelessWidget {
                     ),
                     ElevatedButton.icon(
                       onPressed: () async {
-                        // Registrazione dell'uscita
-                        await DatabaseHelper.insertUscita(dipendente['id']);
-                        print("Uscita registrata per ${dipendente['codiceFiscale']}");
+                        bool alreadyRegistered = await DatabaseHelper.checkUscita(dipendente['id']);
+                        if (alreadyRegistered) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Uscita già registrata per oggi')),
+                          );
+                        } else {
+                          await DatabaseHelper.insertUscita(dipendente['id']);
+                          print("Uscita registrata per ${dipendente['codiceFiscale']}");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Uscita registrata con successo!')),
+                          );
+                        }
                       },
                       icon: Icon(Icons.logout, color: Colors.white),
                       label: Text('Uscita'),
@@ -214,6 +227,7 @@ class EntryExitSection extends StatelessWidget {
             },
           ),
           SizedBox(height: 10),
+          // Ultima registrazione orario (data fittizia per il demo)
           Text(
             'Ultima registrazione: 8:39 AM',
             style: Theme.of(context).textTheme.bodyLarge,
@@ -224,8 +238,6 @@ class EntryExitSection extends StatelessWidget {
   }
 }
 
-
-// Sezione per le ore lavorate (con grafico circolare)
 class HoursWorkedSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

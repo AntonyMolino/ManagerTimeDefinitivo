@@ -106,6 +106,40 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
+  static Future<bool> checkEntrata(int dipendenteId) async {
+    final db = await getDatabase;
+
+    // Ottieni la data di oggi
+    final oggi = DateTime.now();
+    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day); // Solo la data, senza orario
+
+    // Esegui una query per verificare se esiste già un'entrata per oggi
+    final result = await db.query(
+      'entrate',
+      where: 'dipendenteEntr = ? AND date(data) = ?',
+      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10)], // Confronta solo la data
+    );
+
+    return result.isNotEmpty; // Restituisce true se esiste già una registrazione di entrata per oggi
+  }
+
+
+  static Future<bool> checkUscita(int dipendenteId) async {
+    final db = await getDatabase;
+
+    // Ottieni la data di oggi
+    final oggi = DateTime.now();
+    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day); // Solo la data, senza orario
+
+    // Esegui una query per verificare se esiste già un'uscita per oggi
+    final result = await db.query(
+      'uscite',
+      where: 'dipendenteUsc = ? AND date(data) = ?',
+      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10)], // Confronta solo la data
+    );
+
+    return result.isNotEmpty; // Restituisce true se esiste già una registrazione di uscita per oggi
+  }
 
 
   //GET
