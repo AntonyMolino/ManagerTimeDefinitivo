@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'adminpage.dart'; // Importa la pagina admin
+import 'adminpage.dart';
 
 class AdminLoginPage extends StatefulWidget {
   @override
@@ -8,7 +8,7 @@ class AdminLoginPage extends StatefulWidget {
 
 class _AdminLoginPageState extends State<AdminLoginPage> {
   final TextEditingController _passwordController = TextEditingController();
-  final String _correctPassword = "admin123";
+  final String _correctPassword = "";
   void _checkPassword() {
     if (_passwordController.text == _correctPassword) {
       Navigator.push(

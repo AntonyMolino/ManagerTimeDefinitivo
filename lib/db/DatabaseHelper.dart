@@ -70,7 +70,8 @@ class DatabaseHelper {
     final db = await getDatabase;
     await db.insert('entrate', {
       'dipendenteEntr': dipendenteId,
-      'data': DateTime.now().toString(),
+      'data': DateTime.now().toString().substring(0, 10),
+      'ora' : DateTime.now().toString().substring(11, 16),
     });
   }
 
@@ -80,7 +81,8 @@ class DatabaseHelper {
     final db = await getDatabase;
     await db.insert('uscite', {
       'dipendenteUsc': dipendenteId,
-      'data': DateTime.now().toString(),
+      'data': DateTime.now().toString().substring(0, 10),
+      'ora' : DateTime.now().toString().substring(11, 16),
     });
   }
   //GET
@@ -95,6 +97,15 @@ class DatabaseHelper {
       'Dipendenti',
       where: 'codiceFiscale = ?',
       whereArgs: [codiceFiscale],
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>> getDipendentibyId(int id) async {
+    final db = await getDatabase;
+    return await db.query(
+      'Dipendenti',
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 

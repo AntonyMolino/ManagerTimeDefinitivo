@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
+import 'package:managertime/screens/entrateUscitePage.dart';
 
 class AdminPage extends StatefulWidget {
   @override
@@ -90,6 +91,17 @@ class _AdminPageState extends State<AdminPage> {
           return ListTile(
             title: Text("${dipendente['nome']} ${dipendente['cognome']}"),
             subtitle: Text("Email: ${dipendente['email']}\nCF: ${dipendente['codiceFiscale']}"),
+            onTap: () {
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EntrateUscitePage(
+                    id: dipendente['id'],
+                  ),
+                ),
+              );
+
+            },
           );
         },
       ),
