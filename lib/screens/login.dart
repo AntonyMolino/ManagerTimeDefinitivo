@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
+import 'package:managertime/screens/admin_login_page.dart';
 import 'package:managertime/screens/dashboard.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -61,6 +62,17 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
       if (scannedData == codiceFiscale) {
         cameraController.stop(); // Ferma la fotocamera prima della navigazione
         isValidQR = true;
+        if (scannedData == "admin") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminLoginPage(),
+            ),
+          ).then((_) {
+            // Riprendi la fotocamera quando si ritorna alla schermata di login
+            cameraController.start();
+          });
+        }else{
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -71,6 +83,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           cameraController.start();
         });
         break;
+        }
       }
     }
 
