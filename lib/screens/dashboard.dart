@@ -183,7 +183,7 @@ class EntryExitSection extends StatelessWidget {
                       onPressed: () async {
                         // Registrazione dell'entrata
                         await DatabaseHelper.insertEntrata(dipendente['id']);
-                        print("Entrata registrata per ${dipendente['id']}");
+                        print("Entrata registrata per ${dipendente['codiceFiscale']}");
                       },
                       icon: Icon(Icons.login, color: Colors.white),
                       label: Text('Entrata'),

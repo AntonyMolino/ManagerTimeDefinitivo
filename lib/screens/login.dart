@@ -4,72 +4,82 @@ import 'package:managertime/screens/dashboard.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   MobileScannerController cameraController = MobileScannerController();
-
+  bool _isCameraPermissionGranted = false;
 
   @override
   void initState() {
     super.initState();
     _requestCameraPermission();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    cameraController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      cameraController.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      cameraController.start();
+    }
   }
 
   void _requestCameraPermission() async {
     PermissionStatus status = await Permission.camera.request();
     if (status.isGranted) {
-      print("Permesso fotocamera concesso");
-    } else if(status.isPermanentlyDenied){
-      print("Permesso fotocamera negato per sempre");
-      openAppSettings();
-    }else{
-      print("Permesso fotocamera negato");
+      setState(() {
+        _isCameraPermissionGranted = true;
+      });
+    } else if (status.isPermanentlyDenied) {
+      _openAppSettings();
     }
   }
+
   void _openAppSettings() async {
-    bool opened = await openAppSettings();
-    if (opened) {
-      print("Impostazioni aperte");
-    } else {
-      print("Impossibile aprire le impostazioni");
-    }
+    await openAppSettings();
   }
 
   Future<void> _onScan(BarcodeCapture barcodeCapture) async {
-    final String scannedData = barcodeCapture.barcodes.first.rawValue ??
-        "Unknown";
-    //await DatabaseHelper.insertDipendente("Antonio", "Molino", "anto22032005@hotmail.com", "franco");
-    //await DatabaseHelper.insertDipendente("Andrea", "Bucelli", "", "topo");
+    final String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
     List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+
+    bool isValidQR = false;
     for (var record in dipendenti) {
       var codiceFiscale = record['codiceFiscale'];
       if (scannedData == codiceFiscale) {
-        print(codiceFiscale);
+        cameraController.stop(); // Ferma la fotocamera prima della navigazione
+        isValidQR = true;
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => HomePage(codiceFiscale: codiceFiscale,)),
-        );
+            builder: (context) => HomePage(codiceFiscale: codiceFiscale),
+          ),
+        ).then((_) {
+          // Riprendi la fotocamera quando si ritorna alla schermata di login
+          cameraController.start();
+        });
         break;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Codice QR non valido')),
-        );
       }
-  }
-  }
+    }
 
-  @override
-  void dispose() {
-    cameraController.dispose();
-    super.dispose();
+    if (!isValidQR) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Codice QR non valido')),
+      );
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -97,15 +107,15 @@ class _LoginScreenState extends State<LoginScreen> {
               style: TextStyle(fontSize: 18),
             ),
             SizedBox(height: 16),
-            Container(
+            _isCameraPermissionGranted
+                ? Container(
               height: 300,
               child: MobileScanner(
                 controller: cameraController,
-                onDetect: (BarcodeCapture barcodeCapture) {
-                  _onScan(barcodeCapture);
-                },
+                onDetect: _onScan,
               ),
-            ),
+            )
+                : Text("Permesso della fotocamera non concesso"),
             SizedBox(height: 24),
           ],
         ),
