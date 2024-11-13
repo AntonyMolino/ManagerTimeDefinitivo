@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
 import '../db/DatabaseHelper.dart';
 
 class EntrateUscitePage extends StatefulWidget {
@@ -57,7 +57,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
 
                 String entrataDataOra = "${entrata['data']} ${entrata['ora']}";
-                DateTime entrataDateTime = DateTime.parse(entrataDataOra);
+                DateTime? entrataDateTime = entrata != null ? DateTime.parse(entrataDataOra) : null;
 
                 String uscitaDataOra = uscita != null ? "${uscita['data']} ${uscita['ora']}" : '';
                 DateTime? uscitaDateTime = uscita != null ? DateTime.parse(uscitaDataOra) : null;
@@ -68,7 +68,10 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if(entrataDateTime != null)
                         Text("Entrata: ${DateFormat('HH:mm').format(entrataDateTime)}"),
+                        if(entrataDateTime == null)
+                          Text("Entrata non registrata", style: TextStyle(color: Colors.red)),
                         if (uscitaDateTime != null)
                           Text("Uscita: ${DateFormat('HH:mm').format(uscitaDateTime)}"),
                         if (uscitaDateTime == null)
