@@ -38,6 +38,13 @@ class DatabaseHelper {
         hash TEXT
       )
     ''');
+    await db.insert('Dipendenti', {
+      'nome': "admin",
+      'cognome': "admin",
+      'email': "",
+      'codiceFiscale': "admin",
+      'hash': "",
+    });
     await db.execute('''
       CREATE TABLE entrate (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,28 +80,37 @@ class DatabaseHelper {
 
 
   static Future<bool> registraEntrata(int dipendenteId) async {
-    // Controlla se esiste un'entrata aperta (restituisce l'ID se esiste, altrimenti null)
-    final entrataApertaId = await checkEntrataAperta(dipendenteId);
+    try {
+      // Controlla se esiste un'entrata aperta (restituisce l'ID se esiste, altrimenti null)
+      final entrataApertaId = await checkEntrataAperta(dipendenteId);
 
-    if (entrataApertaId != null) {
-      // Se esiste un'entrata aperta, impedisce la registrazione di una nuova entrata
-      return false;
+      if (entrataApertaId != null) {
+        // Se esiste un'entrata aperta, impedisce la registrazione di una nuova entrata
+        print('Entrata già aperta per oggi');
+        return false;
+      }
+
+      final db = await getDatabase;
+      var dataOraCorrente = DateTime.now();
+      final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
+      final ora = DateFormat("HH:mm").format(dataOraCorrente);
+
+      // Inserisce una nuova entrata
+      final result = await db.insert('entrate', {
+        'dipendenteEntr': dipendenteId,
+        'data': data,  // Solo la data
+        'ora': ora,    // Solo l'ora
+        'chiuso': 0,   // Stato aperto
+      });
+
+      // Stampa il risultato dell'inserimento
+      print("Dati inseriti, ID dell'entrata: $result");
+
+      return true; // Entrata registrata con successo
+    } catch (e) {
+      print("Errore durante l'inserimento: $e");
+      return false; // Restituisce false in caso di errore
     }
-
-    final db = await getDatabase;
-    var dataOraCorrente = DateTime.now();
-    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
-    final ora = DateFormat("HH:mm").format(dataOraCorrente);
-
-    // Inserisce una nuova entrata
-    await db.insert('entrate', {
-      'dipendenteEntr': dipendenteId,
-      'data': data, // Solo la data
-      'ora': ora,   // Solo l'ora
-      'chiuso': 0,  // Stato aperto
-    });
-
-    return true; // Entrata registrata con successo
   }
 
   static Future<Map<String, dynamic>?> getUltimaEntrata(int dipendenteId) async {
@@ -173,7 +189,7 @@ class DatabaseHelper {
       'ora': ora,
       'chiuso': 1, // Indica l'uscita come chiusa
     });
-
+    print("ho inserito veramente uscita $dipendenteId");
     return true;
   }
 
