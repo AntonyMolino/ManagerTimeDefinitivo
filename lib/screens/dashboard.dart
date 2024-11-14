@@ -135,7 +135,7 @@ class EntryExitSection extends StatelessWidget {
         break;
       }
     }
-    return dipendente ?? {}; // Restituisci un oggetto vuoto se non trovato
+    return dipendente ?? {}; // Restituisce una mappa vuota se non trovato
   }
 
   @override
@@ -175,16 +175,16 @@ class EntryExitSection extends StatelessWidget {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    // Pulsante per registrare l'entrata
                     ElevatedButton.icon(
                       onPressed: () async {
                         bool entrataAperta = await DatabaseHelper.checkEntrataAperta(dipendente['id']);
                         if (entrataAperta) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Entrata già aperta per oggi')),
+                            SnackBar(content: Text('Una entrata è già aperta per oggi. Devi chiuderla prima di registrarne una nuova.')),
                           );
                         } else {
                           await DatabaseHelper.registraEntrata(dipendente['id']);
-                          print("Entrata registrata per ${dipendente['codiceFiscale']}");
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Entrata registrata con successo!')),
                           );
@@ -198,16 +198,16 @@ class EntryExitSection extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
                     ),
+                    // Pulsante per registrare l'uscita
                     ElevatedButton.icon(
                       onPressed: () async {
                         bool uscitaAperta = await DatabaseHelper.checkUscitaAperta(dipendente['id']);
                         if (uscitaAperta) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Uscita già aperta per oggi')),
+                            SnackBar(content: Text('Un\'uscita è già aperta per oggi. Devi chiuderla prima di registrarne una nuova.')),
                           );
                         } else {
                           await DatabaseHelper.registraUscita(dipendente['id']);
-                          print("Uscita registrata per ${dipendente['codiceFiscale']}");
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Uscita registrata con successo!')),
                           );
@@ -228,7 +228,7 @@ class EntryExitSection extends StatelessWidget {
           ),
           SizedBox(height: 10),
           Text(
-            'Ultima registrazione: 8:39 AM', // Aggiorna con l'ora reale di registrazione, se necessario
+            'Ultima registrazione: 8:39 AM', // Può essere aggiornato con l'ora reale di registrazione, se necessario
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
@@ -236,6 +236,8 @@ class EntryExitSection extends StatelessWidget {
     );
   }
 }
+
+
 
 
 class HoursWorkedSection extends StatelessWidget {
