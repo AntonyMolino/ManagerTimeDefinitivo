@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -72,44 +73,44 @@ class DatabaseHelper {
 
 
   static Future<bool> registraEntrata(int dipendenteId) async {
-    final entrataAperta = await checkEntrataAperta(dipendenteId);
-    final uscitaAperta = await checkUscitaAperta(dipendenteId);
+    // Controlla se esiste un'entrata aperta (restituisce l'ID se esiste, altrimenti null)
+    final entrataApertaId = await checkEntrataAperta(dipendenteId);
 
-    if (entrataAperta || uscitaAperta) {
-      // Non permette di registrare un'entrata se c'è già un'entrata o un'uscita aperta
+    if (entrataApertaId != null) {
+      // Se esiste un'entrata aperta, impedisce la registrazione di una nuova entrata
       return false;
     }
 
     final db = await getDatabase;
-    final dataOraCorrente = DateTime.now();
+    var dataOraCorrente = DateTime.now();
+    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
+    final ora = DateFormat("HH:mm").format(dataOraCorrente);
 
-    // Estrai la data senza l'ora
-    final data = DateTime(dataOraCorrente.year, dataOraCorrente.month, dataOraCorrente.day);
-
-    // Estrai e formatta l'ora come "HH:mm"
-    final timeFormatted = "${dataOraCorrente.hour.toString().padLeft(2, '0')}:${dataOraCorrente.minute.toString().padLeft(2, '0')}";
-
+    // Inserisce una nuova entrata
     await db.insert('entrate', {
       'dipendenteEntr': dipendenteId,
-      'data': data.toIso8601String().substring(0, 10), // Data senza l'ora
-      'ora': timeFormatted, // Ora formattata come "HH:mm"
-      'chiuso': 0, // Entrata aperta
+      'data': data, // Solo la data
+      'ora': ora,   // Solo l'ora
+      'chiuso': 0,  // Stato aperto
     });
 
     return true; // Entrata registrata con successo
   }
+
   static Future<Map<String, dynamic>?> getUltimaEntrata(int dipendenteId) async {
     final db = await getDatabase;
 
     // Ottieni la data di oggi (per limitare la ricerca a oggi)
-    final oggi = DateTime.now();
-    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day);
+    var  dataOraCorrente = DateTime.now();
+    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
+
+
 
     // Ottieni l'ultima entrata (ordinata per data e ora decrescente)
     final result = await db.query(
       'entrate',
-      where: 'dipendenteEntr = ? AND date(data) = ?',
-      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10)],
+      where: 'dipendenteEntr = ? AND data = ?',
+      whereArgs: [dipendenteId , data],
       orderBy: 'data DESC', // Ordina per data decrescente (l'ultima entrata)
       limit: 1, // Solo l'ultima entrata
     );
@@ -144,32 +145,38 @@ class DatabaseHelper {
 
 
   static Future<bool> registraUscita(int dipendenteId) async {
-    final entrataAperta = await checkEntrataAperta(dipendenteId);
-    final uscitaAperta = await checkUscitaAperta(dipendenteId);
+    // Controlla se esiste un'entrata aperta
+    final entrataApertaId = await checkEntrataAperta(dipendenteId);
 
-    if (!entrataAperta || uscitaAperta) {
-      // Non permette una nuova uscita se non c'è un'entrata aperta o se c'è già un'uscita aperta
+    if (entrataApertaId == null) {
+      // Nessuna entrata aperta, non permette di registrare un'uscita
       return false;
     }
 
     final db = await getDatabase;
-    final dataOraCorrente = DateTime.now();
+    var dataOraCorrente = DateTime.now();
+    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
+    final ora = DateFormat("HH:mm").format(dataOraCorrente);
 
-    // Estrai la data senza l'ora
-    final data = DateTime(dataOraCorrente.year, dataOraCorrente.month, dataOraCorrente.day);
+    // Chiude l'entrata aperta
+    await db.update(
+      'entrate',
+      {'chiuso': 1},
+      where: 'id = ?',
+      whereArgs: [entrataApertaId],
+    );
 
-    // Estrai e formatta l'ora come "HH:mm"
-    final timeFormatted = "${dataOraCorrente.hour.toString().padLeft(2, '0')}:${dataOraCorrente.minute.toString().padLeft(2, '0')}";
-    chiudiUltimaEntrata(dipendenteId);
+    // Registra l'uscita
     await db.insert('uscite', {
       'dipendenteUsc': dipendenteId,
-      'data': data.toIso8601String().substring(0, 10), // Data senza l'ora
-      'ora': timeFormatted, // Ora formattata come "HH:mm"
-      'chiuso': 1, // Uscita chiusa
+      'data': data,
+      'ora': ora,
+      'chiuso': 1, // Indica l'uscita come chiusa
     });
 
-    return true; // Uscita registrata con successo
+    return true;
   }
+
 
 
   //UPDATE
@@ -193,39 +200,49 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
-  static Future<bool> checkEntrataAperta(int dipendenteId) async {
+  static Future<Object?> checkEntrataAperta(int dipendenteId) async {
     final db = await getDatabase;
 
-    // Ottieni la data di oggi (senza ora)
-    final oggi = DateTime.now();
-    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day);
+    var dataOraCorrente = DateTime.now();
+    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente); // Data senza l'ora
 
-    // Query per cercare un'entrata non chiusa
+    // Controlla se esiste un'entrata aperta per il dipendente nella stessa giornata
     final result = await db.query(
       'entrate',
       where: 'dipendenteEntr = ? AND data = ? AND chiuso = ?',
-      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10), 0],
+      whereArgs: [dipendenteId, data, 0], // chiuso = 0 significa aperto
     );
 
-    return result.isNotEmpty; // Restituisce true se c'è un'entrata aperta
+    if (result.isNotEmpty) {
+      // Se c'è un'entrata aperta, restituisce l'ID dell'entrata aperta
+      return result.first['id']; // Assumendo che 'id' sia la colonna dell'ID dell'entrata
+    }
+
+    return null; // Se non ci sono entrate aperte, restituisce null
   }
+
+
+
+
 
   static Future<bool> checkUscitaAperta(int dipendenteId) async {
     final db = await getDatabase;
 
     // Ottieni la data di oggi (senza ora)
-    final oggi = DateTime.now();
-    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day);
+    var dataOraCorrente = DateTime.now();
+    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
 
     // Query per cercare un'uscita non chiusa
     final result = await db.query(
       'uscite',
       where: 'dipendenteUsc = ? AND data = ? AND chiuso = ?',
-      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10), 0],
+      whereArgs: [dipendenteId, data, 0],
     );
 
     return result.isNotEmpty; // Restituisce true se c'è un'uscita aperta
   }
+
+
 
 
   //GET
