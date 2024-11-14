@@ -177,13 +177,13 @@ class EntryExitSection extends StatelessWidget {
                   children: [
                     ElevatedButton.icon(
                       onPressed: () async {
-                        bool alreadyRegistered = await DatabaseHelper.checkEntrata(dipendente['id']);
-                        if (alreadyRegistered) {
+                        bool entrataAperta = await DatabaseHelper.checkEntrataAperta(dipendente['id']);
+                        if (entrataAperta) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Entrata già registrata per oggi')),
+                            SnackBar(content: Text('Entrata già aperta per oggi')),
                           );
                         } else {
-                          await DatabaseHelper.insertEntrata(dipendente['id']);
+                          await DatabaseHelper.registraEntrata(dipendente['id']);
                           print("Entrata registrata per ${dipendente['codiceFiscale']}");
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Entrata registrata con successo!')),
@@ -200,13 +200,13 @@ class EntryExitSection extends StatelessWidget {
                     ),
                     ElevatedButton.icon(
                       onPressed: () async {
-                        bool alreadyRegistered = await DatabaseHelper.checkUscita(dipendente['id']);
-                        if (alreadyRegistered) {
+                        bool uscitaAperta = await DatabaseHelper.checkUscitaAperta(dipendente['id']);
+                        if (uscitaAperta) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Uscita già registrata per oggi')),
+                            SnackBar(content: Text('Uscita già aperta per oggi')),
                           );
                         } else {
-                          await DatabaseHelper.insertUscita(dipendente['id']);
+                          await DatabaseHelper.registraUscita(dipendente['id']);
                           print("Uscita registrata per ${dipendente['codiceFiscale']}");
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Uscita registrata con successo!')),
@@ -227,9 +227,8 @@ class EntryExitSection extends StatelessWidget {
             },
           ),
           SizedBox(height: 10),
-          // Ultima registrazione orario (data fittizia per il demo)
           Text(
-            'Ultima registrazione: 8:39 AM',
+            'Ultima registrazione: 8:39 AM', // Aggiorna con l'ora reale di registrazione, se necessario
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
@@ -237,6 +236,7 @@ class EntryExitSection extends StatelessWidget {
     );
   }
 }
+
 
 class HoursWorkedSection extends StatelessWidget {
   @override

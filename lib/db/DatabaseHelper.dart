@@ -42,6 +42,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         dipendenteEntr INTEGER,
         data DATETIME,
+        ora DATETIME,
+        chiuso INTEGER,
         FOREIGN KEY(dipendenteEntr) REFERENCES Dipendenti(id)
       )
     ''');
@@ -50,6 +52,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         dipendenteUsc INTEGER,
         data DATETIME,
+        ora DATETIME,
+        chiuso INTEGER,
         FOREIGN KEY(dipendenteUsc) REFERENCES Dipendenti(id)
       )
     ''');
@@ -66,25 +70,64 @@ class DatabaseHelper {
     });
   }
 
-  static Future<void> insertEntrata(int dipendenteId) async {
+
+  static Future<bool> registraEntrata(int dipendenteId) async {
+    final entrataAperta = await checkEntrataAperta(dipendenteId);
+    final uscitaAperta = await checkUscitaAperta(dipendenteId);
+
+    if (entrataAperta || uscitaAperta) {
+      // Non permette di registrare un'entrata se c'è già un'entrata o un'uscita aperta
+      return false;
+    }
+
     final db = await getDatabase;
+    final dataOraCorrente = DateTime.now();
+
+    // Estrai la data senza l'ora
+    final data = DateTime(dataOraCorrente.year, dataOraCorrente.month, dataOraCorrente.day);
+
+    // Estrai e formatta l'ora come "HH:mm"
+    final timeFormatted = "${dataOraCorrente.hour.toString().padLeft(2, '0')}:${dataOraCorrente.minute.toString().padLeft(2, '0')}";
+
     await db.insert('entrate', {
       'dipendenteEntr': dipendenteId,
-      'data': DateTime.now().toString().substring(0, 10),
-      'ora' : DateTime.now().toString().substring(11, 16),
+      'data': data.toIso8601String().substring(0, 10), // Data senza l'ora
+      'ora': timeFormatted, // Ora formattata come "HH:mm"
+      'chiuso': 0, // Entrata aperta
     });
+
+    return true; // Entrata registrata con successo
   }
 
+  static Future<bool> registraUscita(int dipendenteId) async {
+    final entrataAperta = await checkEntrataAperta(dipendenteId);
+    final uscitaAperta = await checkUscitaAperta(dipendenteId);
 
+    if (!entrataAperta || uscitaAperta) {
+      // Non permette una nuova uscita se non c'è un'entrata aperta o se c'è già un'uscita aperta
+      return false;
+    }
 
-  static Future<void> insertUscita(int dipendenteId) async {
     final db = await getDatabase;
+    final dataOraCorrente = DateTime.now();
+
+    // Estrai la data senza l'ora
+    final data = DateTime(dataOraCorrente.year, dataOraCorrente.month, dataOraCorrente.day);
+
+    // Estrai e formatta l'ora come "HH:mm"
+    final timeFormatted = "${dataOraCorrente.hour.toString().padLeft(2, '0')}:${dataOraCorrente.minute.toString().padLeft(2, '0')}";
+
     await db.insert('uscite', {
       'dipendenteUsc': dipendenteId,
-      'data': DateTime.now().toString().substring(0, 10),
-      'ora' : DateTime.now().toString().substring(11, 16),
+      'data': data.toIso8601String().substring(0, 10), // Data senza l'ora
+      'ora': timeFormatted, // Ora formattata come "HH:mm"
+      'chiuso': 0, // Uscita aperta
     });
+
+    return true; // Uscita registrata con successo
   }
+
+
   //UPDATE
   static Future<void> updateEntrataTime(int id, String ora) async {
     final db = await getDatabase;
@@ -106,40 +149,40 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
-  static Future<bool> checkEntrata(int dipendenteId) async {
+  static Future<bool> checkEntrataAperta(int dipendenteId) async {
     final db = await getDatabase;
 
-    // Ottieni la data di oggi
+    // Get today's date (ignoring time)
     final oggi = DateTime.now();
-    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day); // Solo la data, senza orario
+    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day);
 
-    // Esegui una query per verificare se esiste già un'entrata per oggi
+    // Query the database for an open "entrata" (entry)
     final result = await db.query(
       'entrate',
-      where: 'dipendenteEntr = ? AND date(data) = ?',
-      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10)], // Confronta solo la data
+      where: 'dipendenteEntr = ? AND data = ? AND chiuso = ?',
+      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10), 0],
     );
 
-    return result.isNotEmpty; // Restituisce true se esiste già una registrazione di entrata per oggi
+    return result.isNotEmpty; // Return true if there's an open entry
   }
 
-
-  static Future<bool> checkUscita(int dipendenteId) async {
+  static Future<bool> checkUscitaAperta(int dipendenteId) async {
     final db = await getDatabase;
 
-    // Ottieni la data di oggi
+    // Get today's date (ignoring time)
     final oggi = DateTime.now();
-    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day); // Solo la data, senza orario
+    final dataOggi = DateTime(oggi.year, oggi.month, oggi.day);
 
-    // Esegui una query per verificare se esiste già un'uscita per oggi
+    // Query the database for an open "uscita" (exit)
     final result = await db.query(
       'uscite',
-      where: 'dipendenteUsc = ? AND date(data) = ?',
-      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10)], // Confronta solo la data
+      where: 'dipendenteUsc = ? AND data = ? AND chiuso = ?',
+      whereArgs: [dipendenteId, dataOggi.toIso8601String().substring(0, 10), 0],
     );
 
-    return result.isNotEmpty; // Restituisce true se esiste già una registrazione di uscita per oggi
+    return result.isNotEmpty; // Return true if there's an open exit
   }
+
 
 
   //GET
@@ -183,6 +226,9 @@ class DatabaseHelper {
       whereArgs: [dipendenteId],
     );
   }
+
+
+
 
 
 }
