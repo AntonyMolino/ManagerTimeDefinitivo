@@ -85,7 +85,7 @@ class DatabaseHelper {
       final entrataApertaId = await checkEntrataAperta(dipendenteId);
 
       if (entrataApertaId != null) {
-        // Se esiste un'entrata aperta, impedisce la registrazione di una nuova entrata
+        
         print('Entrata già aperta per oggi');
         return false;
       }
