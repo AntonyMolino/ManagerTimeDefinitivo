@@ -85,7 +85,7 @@ class DatabaseHelper {
       final entrataApertaId = await checkEntrataAperta(dipendenteId);
 
       if (entrataApertaId != null) {
-        
+
         print('Entrata già aperta per oggi');
         return false;
       }

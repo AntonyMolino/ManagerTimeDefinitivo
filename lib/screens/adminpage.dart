@@ -83,6 +83,7 @@ class _AdminPageState extends State<AdminPage> {
         title: Text('Admin - Gestione Dipendenti',
         style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
       ),
       body: ListView.builder(
         itemCount: _dipendenti.length,

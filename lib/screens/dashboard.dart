@@ -181,7 +181,7 @@ class EntryExitSection extends StatelessWidget {
                         bool entrataAperta = await DatabaseHelper.registraEntrata(dipendente['id']);
                         if (!entrataAperta) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Una entrata è già aperta per oggi. Devi chiuderla prima di registrarne una nuova.')),
+                            SnackBar(content: Text("Una entrata è già aperta per oggi. Devi segnare  prima l'uscita di registrarne una nuova. Contatta un admin!")),
                           );
                         } else {
                           await DatabaseHelper.registraEntrata(dipendente['id']);
@@ -204,7 +204,7 @@ class EntryExitSection extends StatelessWidget {
                         bool uscitaAperta = await DatabaseHelper.registraUscita(dipendente['id']);
                         if (!uscitaAperta) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Un\'uscita è già aperta per oggi. Devi chiuderla prima di registrarne una nuova.')),
+                            SnackBar(content: Text('Non hai un entrata valida da poter chiudere')),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(

@@ -42,9 +42,11 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     return Scaffold(
       appBar: AppBar(
         title: dipendente != null
-            ? Text('Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}')
+            ? Text('Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}',
+          style: TextStyle(color: Colors.white),)
             : Text('Entrate/Uscite'),
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
