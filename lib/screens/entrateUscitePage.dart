@@ -30,15 +30,15 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     // Recupera le uscite per ogni entrata, usando l'entrataId
     List<Map<String, dynamic>> uscite = [];
     for (var entrata in entrate) {
-      var uscita = await DatabaseHelper.getUsciteByEntrataId(entrata['id']); // Passa l'entrataId
+      var uscita = await DatabaseHelper.getUsciteByEntrataId(entrata['id']);
       if (uscita.isNotEmpty) {
-        uscite.add(uscita[0]); // Aggiungi la prima uscita trovata (assumiamo che ci sia una sola uscita per entrata)
+        uscite.add(uscita[0]);
       } else {
         uscite.add({});
       }
     }
 
-    // Recupera i dipendenti (se necessario)
+    // Recupera i dipendenti
     List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendentibyId(widget.id);
 
     setState(() {
@@ -50,8 +50,13 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   void _editEntrataUscita(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
-    TextEditingController entrataController = TextEditingController(text: entrata['ora']);
-    TextEditingController uscitaController = TextEditingController(text: uscita?['ora'] ?? '');
+    // Assicurati che i valori non siano nulli e sostituisci con una stringa vuota se lo sono
+    String entrataOra = entrata['ora'] ?? ''; // Se 'ora' è null, usa una stringa vuota
+    String uscitaOra = uscita?['ora'] ?? ''; // Se 'ora' è null, usa una stringa vuota
+
+    // Inizializza i controller con valori sicuri
+    TextEditingController entrataController = TextEditingController(text: entrataOra);
+    TextEditingController uscitaController = TextEditingController(text: uscitaOra);
 
     showDialog(
       context: context,
@@ -84,24 +89,25 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
               onPressed: () async {
                 // Aggiorna l'orario di entrata nel database usando l'ID
                 await DatabaseHelper.updateEntrataById(
-                  entrata['id'], // Usa l'ID dell'entrata
-                  entrataController.text, // Nuovo orario di entrata
+                  entrata['id'],
+                  entrataController.text.isEmpty ? '' : entrataController.text, // Ora di entrata
                 );
 
-                if (uscita == null) {
-                  // Inserisce una nuova uscita se non esiste, associandola all'entrataId
-                  await DatabaseHelper.addUscitaByData(
-                    entrata['data'], // Usa la stessa data dell'entrata
-                    uscitaController.text, // Nuovo orario di uscita
-                    entrata['id'], // Passa l'entrataId
-                  );
-                } else {
-                  // Aggiorna l'orario di uscita esistente, associando l'entrataId
-                  await DatabaseHelper.updateUscitaByDataOra(
-                    uscita['data'],
-                    uscita['ora'],
-                    uscitaController.text,
-                  );
+                if (uscita == null || uscitaController.text.isNotEmpty) {
+                  // Inserisce una nuova uscita se non esiste o se l'utente ha inserito un orario
+                  if (uscita == null) {
+                    await DatabaseHelper.addUscitaByData(
+                      entrata['data'],
+                      uscitaController.text.isEmpty ? '' : uscitaController.text, // Ora di uscita
+                      entrata['id'],
+                    );
+                  } else {
+                    await DatabaseHelper.updateUscitaByDataOra(
+                      uscita['data'],
+                      uscita['ora'],
+                      uscitaController.text.isEmpty ? '' : uscitaController.text, // Ora di uscita aggiornata
+                    );
+                  }
                 }
 
                 // Aggiorna la UI
@@ -115,6 +121,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       },
     );
   }
+
 
   void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
     showDialog(
@@ -132,17 +139,15 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             ),
             TextButton(
               onPressed: () async {
-                // Elimina l'entrata usando l'ID
-                await DatabaseHelper.deleteEntrataById(entrata['id']);
-
-                // Elimina l'uscita usando l'ID, se esiste
+              if(entrata != null){
+                  await DatabaseHelper.deleteEntrataById(entrata['id']);
+                }
                 if (uscita != null) {
                   await DatabaseHelper.deleteUscitaById(uscita['id']);
                 }
 
-                // Aggiorna la UI
                 _fetchEntrateUscite();
-                Navigator.of(context).pop(); // Chiude il dialog
+                Navigator.of(context).pop();
               },
               child: Text('Elimina', style: TextStyle(color: Colors.red)),
             ),
@@ -211,12 +216,21 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   // Funzione per tentare di fare il parse della data, restituendo null in caso di errore
-  DateTime? _parseDateTime(String dateTimeStr) {
+  // Funzione per tentare di fare il parse della data, restituendo null in caso di errore
+  DateTime? _parseDateTime(String? dateTimeStr) {
+    if (dateTimeStr == null || dateTimeStr.isEmpty) {
+      // Se la stringa è null o vuota, non tentare di fare il parse
+      return null;
+    }
+
     try {
-      return dateTimeStr.isNotEmpty ? DateTime.parse(dateTimeStr) : null;
+      // Se la stringa non è vuota, tentiamo di fare il parse
+      return DateTime.parse(dateTimeStr);
     } catch (e) {
+      // Se c'è un errore nel parsing, restituire null
       print('Errore nel parsing della data/ora: $e');
       return null;
     }
   }
+
 }
