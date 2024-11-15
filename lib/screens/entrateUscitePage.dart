@@ -24,9 +24,21 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   Future<void> _fetchEntrateUscite() async {
-
+    // Recupera le entrate dal database
     List<Map<String, dynamic>> entrate = await DatabaseHelper.getEntrate(widget.id);
-    List<Map<String, dynamic>> uscite = await DatabaseHelper.getUscite(widget.id);
+
+    // Recupera le uscite per ogni entrata, usando l'entrataId
+    List<Map<String, dynamic>> uscite = [];
+    for (var entrata in entrate) {
+      var uscita = await DatabaseHelper.getUsciteByEntrataId(entrata['id']); // Passa l'entrataId
+      if (uscita.isNotEmpty) {
+        uscite.add(uscita[0]); // Aggiungi la prima uscita trovata (assumiamo che ci sia una sola uscita per entrata)
+      } else {
+        uscite.add({});
+      }
+    }
+
+    // Recupera i dipendenti (se necessario)
     List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendentibyId(widget.id);
 
     setState(() {
@@ -70,21 +82,21 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             ),
             TextButton(
               onPressed: () async {
-                // Aggiorna l'orario di entrata nel database
-                await DatabaseHelper.updateEntrataByDataOra(
-                  entrata['data'],
-                  entrata['ora'],
-                  entrataController.text,
+                // Aggiorna l'orario di entrata nel database usando l'ID
+                await DatabaseHelper.updateEntrataById(
+                  entrata['id'], // Usa l'ID dell'entrata
+                  entrataController.text, // Nuovo orario di entrata
                 );
 
                 if (uscita == null) {
-                  // Inserisce una nuova uscita se non esiste
+                  // Inserisce una nuova uscita se non esiste, associandola all'entrataId
                   await DatabaseHelper.addUscitaByData(
                     entrata['data'], // Usa la stessa data dell'entrata
                     uscitaController.text, // Nuovo orario di uscita
+                    entrata['id'], // Passa l'entrataId
                   );
                 } else {
-                  // Aggiorna l'orario di uscita esistente
+                  // Aggiorna l'orario di uscita esistente, associando l'entrataId
                   await DatabaseHelper.updateUscitaByDataOra(
                     uscita['data'],
                     uscita['ora'],
@@ -104,8 +116,41 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     );
   }
 
+  void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Conferma Eliminazione'),
+          content: Text('Sei sicuro di voler eliminare questa entrata e la relativa uscita (se presente)?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Chiude il dialog senza fare nulla
+              },
+              child: Text('Annulla'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Elimina l'entrata usando l'ID
+                await DatabaseHelper.deleteEntrataById(entrata['id']);
 
+                // Elimina l'uscita usando l'ID, se esiste
+                if (uscita != null) {
+                  await DatabaseHelper.deleteUscitaById(uscita['id']);
+                }
 
+                // Aggiorna la UI
+                _fetchEntrateUscite();
+                Navigator.of(context).pop(); // Chiude il dialog
+              },
+              child: Text('Elimina', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,16 +172,15 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                 var entrata = _entrate[index];
                 var uscita = _uscite.isNotEmpty && index < _uscite.length ? _uscite[index] : null;
 
-
                 String entrataDataOra = "${entrata['data']} ${entrata['ora']}";
-                DateTime? entrataDateTime = entrata != null ? DateTime.parse(entrataDataOra) : null;
+                DateTime? entrataDateTime = _parseDateTime(entrataDataOra);
 
                 String uscitaDataOra = uscita != null ? "${uscita['data']} ${uscita['ora']}" : '';
-                DateTime? uscitaDateTime = uscita != null ? DateTime.parse(uscitaDataOra) : null;
+                DateTime? uscitaDateTime = _parseDateTime(uscitaDataOra);
 
                 return Card(
                   child: ListTile(
-                    title: Text("Data: ${DateFormat('dd-MM-yyyy').format(entrataDateTime!)}"),
+                    title: Text("Data: ${entrataDateTime != null ? DateFormat('dd-MM-yyyy').format(entrataDateTime) : 'Data non disponibile'}"),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -148,20 +192,31 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                           Text("Uscita: ${DateFormat('HH:mm').format(uscitaDateTime)}"),
                         if (uscitaDateTime == null)
                           Text("Uscita non registrata", style: TextStyle(color: Colors.red)),
-
                       ],
                     ),
                     onTap: () {
-                      _editEntrataUscita(entrata, uscita ); // Gestisce il tocco della card
+                      _editEntrataUscita(entrata, uscita);
+                    },
+                    onLongPress: () {
+                      _confirmDelete(entrata, uscita);
                     },
                   ),
                 );
-
               },
             ),
           ),
         ],
       ),
     );
+  }
+
+  // Funzione per tentare di fare il parse della data, restituendo null in caso di errore
+  DateTime? _parseDateTime(String dateTimeStr) {
+    try {
+      return dateTimeStr.isNotEmpty ? DateTime.parse(dateTimeStr) : null;
+    } catch (e) {
+      print('Errore nel parsing della data/ora: $e');
+      return null;
+    }
   }
 }

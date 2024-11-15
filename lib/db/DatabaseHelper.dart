@@ -52,7 +52,9 @@ class DatabaseHelper {
         data DATETIME,
         ora DATETIME,
         chiuso INTEGER,
-        FOREIGN KEY(dipendenteEntr) REFERENCES Dipendenti(id)
+        uscitaId INTEGER,
+        FOREIGN KEY(dipendenteEntr) REFERENCES Dipendenti(id),
+        FOREIGN KEY(uscitaId) REFERENCES uscite(id)
       )
     ''');
     await db.execute('''
@@ -62,7 +64,9 @@ class DatabaseHelper {
         data DATETIME,
         ora DATETIME,
         chiuso INTEGER,
-        FOREIGN KEY(dipendenteUsc) REFERENCES Dipendenti(id)
+        entrataId INTEGER,
+        FOREIGN KEY(dipendenteUsc) REFERENCES Dipendenti(id),
+        FOREIGN KEY(entrataId) REFERENCES entrate(id)
       )
     ''');
   }
@@ -81,11 +85,9 @@ class DatabaseHelper {
 
   static Future<bool> registraEntrata(int dipendenteId) async {
     try {
-      // Controlla se esiste un'entrata aperta (restituisce l'ID se esiste, altrimenti null)
       final entrataApertaId = await checkEntrataAperta(dipendenteId);
 
       if (entrataApertaId != null) {
-
         print('Entrata già aperta per oggi');
         return false;
       }
@@ -95,15 +97,14 @@ class DatabaseHelper {
       final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
       final ora = DateFormat("HH:mm").format(dataOraCorrente);
 
-      // Inserisce una nuova entrata
+      // Inserisci una nuova entrata
       final result = await db.insert('entrate', {
         'dipendenteEntr': dipendenteId,
-        'data': data,  // Solo la data
-        'ora': ora,    // Solo l'ora
-        'chiuso': 0,   // Stato aperto
+        'data': data,
+        'ora': ora,
+        'chiuso': 0, // Stato aperto
       });
 
-      // Stampa il risultato dell'inserimento
       print("Dati inseriti, ID dell'entrata: $result");
 
       return true; // Entrata registrata con successo
@@ -112,6 +113,7 @@ class DatabaseHelper {
       return false; // Restituisce false in caso di errore
     }
   }
+
 
   static Future<Map<String, dynamic>?> getUltimaEntrata(int dipendenteId) async {
     final db = await getDatabase;
@@ -141,23 +143,34 @@ class DatabaseHelper {
 
   static Future<void> chiudiUltimaEntrata(int dipendenteId) async {
     final db = await getDatabase;
-
-    // Ottieni l'ultima entrata del dipendente
     final ultimaEntrata = await getUltimaEntrata(dipendenteId);
 
-    // Se esiste un'entrata aperta (non chiusa)
     if (ultimaEntrata != null) {
-      final entrataId = ultimaEntrata['id']; // Supponendo che l'entrata abbia un campo 'id'
+      final entrataId = ultimaEntrata['id'];
 
-      // Aggiorna lo stato 'chiuso' dell'entrata a 1
       await db.update(
         'entrate',
-        {'chiuso': 1}, // Imposta 'chiuso' a 1
+        {'chiuso': 1},
         where: 'id = ?',
         whereArgs: [entrataId],
       );
+      print("Entrata chiusa con successo.");
     }
   }
+  // Funzione per aggiornare l'entrata usando l'ID
+  static Future<void> updateEntrataById(int entrataId, String nuovaOra) async {
+    final db = await getDatabase;
+
+    // Aggiorna solo l'entrata che ha l'ID specificato
+    await db.update(
+      'entrate',
+      {'ora': nuovaOra}, // Nuovo orario
+      where: 'id = ?',
+      whereArgs: [entrataId], // Usa l'ID per identificare l'entrata univocamente
+    );
+  }
+
+
   static Future<void> updateEntrataByDataOra(String data, String oraOriginale, String nuovaOra) async {
     final db = await getDatabase;
     await db.update(
@@ -176,21 +189,23 @@ class DatabaseHelper {
       whereArgs: [data, oraOriginale],
     );
   }
-  static Future<void> addUscitaByData(String data, String ora) async {
+  static Future<void> addUscitaByData(String entrataData, String uscitaOra, int entrataId) async {
     final db = await getDatabase;
     await db.insert(
       'uscite',
       {
-        'data': data,
-        'ora': ora,
+        'data': entrataData,
+        'ora': uscitaOra,
+        'entrataId': entrataId,  // Aggiungi l'entrataId
       },
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
 
 
   static Future<bool> registraUscita(int dipendenteId) async {
-    // Controlla se esiste un'entrata aperta
+    // Controlla se esiste un'entrata aperta per il dipendente
     final entrataApertaId = await checkEntrataAperta(dipendenteId);
 
     if (entrataApertaId == null) {
@@ -203,24 +218,32 @@ class DatabaseHelper {
     final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
     final ora = DateFormat("HH:mm").format(dataOraCorrente);
 
-    // Chiude l'entrata aperta
+    // Inserisci l'uscita con l'entrataId
+    final uscitaId = await db.insert('uscite', {
+      'dipendenteUsc': dipendenteId,
+      'data': data,
+      'ora': ora,
+      'chiuso': 1, // Indica che l'uscita è chiusa
+      'entrataId': entrataApertaId, // Associa l'uscita all'entrata aperta
+    });
+
+    // Ora aggiorna l'entrata per associare l'uscita
     await db.update(
       'entrate',
-      {'chiuso': 1},
+      {
+        'chiuso': 1, // Indica che l'entrata è chiusa
+        'uscitaId': uscitaId, // Collega l'uscita appena registrata
+      },
       where: 'id = ?',
       whereArgs: [entrataApertaId],
     );
 
-    // Registra l'uscita
-    await db.insert('uscite', {
-      'dipendenteUsc': dipendenteId,
-      'data': data,
-      'ora': ora,
-      'chiuso': 1, // Indica l'uscita come chiusa
-    });
-    print("ho inserito veramente uscita $dipendenteId");
+    print("Uscita registrata e collegata all'entrata");
     return true;
   }
+
+
+
 
 
 
@@ -247,7 +270,6 @@ class DatabaseHelper {
   }
   static Future<Object?> checkEntrataAperta(int dipendenteId) async {
     final db = await getDatabase;
-
     var dataOraCorrente = DateTime.now();
     final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente); // Data senza l'ora
 
@@ -265,6 +287,7 @@ class DatabaseHelper {
 
     return null; // Se non ci sono entrate aperte, restituisce null
   }
+
 
 
 
@@ -329,6 +352,39 @@ class DatabaseHelper {
       'uscite',
       where: 'dipendenteUsc = ?',
       whereArgs: [dipendenteId],
+    );
+  }
+  static Future<List<Map<String, dynamic>>> getUsciteByEntrataId(int entrataId) async {
+    final db = await getDatabase;
+    return await db.query(
+      'uscite',
+      where: 'entrataId = ?',
+      whereArgs: [entrataId],
+    );
+  }
+
+
+
+// Funzione per eliminare un'entrata usando l'ID
+  static Future<void> deleteEntrataById(int entrataId) async {
+    final db = await getDatabase;
+
+    // Elimina solo l'entrata con l'ID specificato
+    await db.delete(
+      'entrate',
+      where: 'id = ?',
+      whereArgs: [entrataId], // Usa l'ID per identificare l'entrata univocamente
+    );
+  }
+  // Funzione per eliminare un'uscita usando l'ID
+  static Future<void> deleteUscitaById(int uscitaId) async {
+    final db = await getDatabase;
+
+    // Elimina solo l'uscita con l'ID specificato
+    await db.delete(
+      'uscite',
+      where: 'id = ?',
+      whereArgs: [uscitaId], // Usa l'ID per identificare l'uscita univocamente
     );
   }
 
