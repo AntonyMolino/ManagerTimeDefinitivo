@@ -158,6 +158,35 @@ class DatabaseHelper {
       );
     }
   }
+  static Future<void> updateEntrataByDataOra(String data, String oraOriginale, String nuovaOra) async {
+    final db = await getDatabase;
+    await db.update(
+      'entrate',
+      {'ora': nuovaOra},
+      where: 'data = ? AND ora = ?',
+      whereArgs: [data, oraOriginale],
+    );
+  }
+  static Future<void> updateUscitaByDataOra(String data, String oraOriginale, String nuovaOra) async {
+    final db = await getDatabase;
+    await db.update(
+      'uscite',
+      {'ora': nuovaOra},
+      where: 'data = ? AND ora = ?',
+      whereArgs: [data, oraOriginale],
+    );
+  }
+  static Future<void> addUscitaByData(String data, String ora) async {
+    final db = await getDatabase;
+    await db.insert(
+      'uscite',
+      {
+        'data': data,
+        'ora': ora,
+      },
+    );
+  }
+
 
 
   static Future<bool> registraUscita(int dipendenteId) async {

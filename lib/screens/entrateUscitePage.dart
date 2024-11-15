@@ -37,6 +37,76 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     });
   }
 
+  void _editEntrataUscita(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
+    TextEditingController entrataController = TextEditingController(text: entrata['ora']);
+    TextEditingController uscitaController = TextEditingController(text: uscita?['ora'] ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Modifica Entrata/Uscita'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: entrataController,
+                decoration: InputDecoration(labelText: 'Ora Entrata'),
+              ),
+              TextField(
+                controller: uscitaController,
+                decoration: InputDecoration(
+                  labelText: uscita == null ? 'Aggiungi Ora Uscita' : 'Modifica Ora Uscita',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Chiude il dialog
+              },
+              child: Text('Annulla'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Aggiorna l'orario di entrata nel database
+                await DatabaseHelper.updateEntrataByDataOra(
+                  entrata['data'],
+                  entrata['ora'],
+                  entrataController.text,
+                );
+
+                if (uscita == null) {
+                  // Inserisce una nuova uscita se non esiste
+                  await DatabaseHelper.addUscitaByData(
+                    entrata['data'], // Usa la stessa data dell'entrata
+                    uscitaController.text, // Nuovo orario di uscita
+                  );
+                } else {
+                  // Aggiorna l'orario di uscita esistente
+                  await DatabaseHelper.updateUscitaByDataOra(
+                    uscita['data'],
+                    uscita['ora'],
+                    uscitaController.text,
+                  );
+                }
+
+                // Aggiorna la UI
+                _fetchEntrateUscite();
+                Navigator.of(context).pop(); // Chiude il dialog
+              },
+              child: Text('Salva'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,23 +136,27 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
                 return Card(
                   child: ListTile(
-
                     title: Text("Data: ${DateFormat('dd-MM-yyyy').format(entrataDateTime!)}"),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if(entrataDateTime != null)
-                        Text("Entrata: ${DateFormat('HH:mm').format(entrataDateTime)}"),
-                        if(entrataDateTime == null)
+                        if (entrataDateTime != null)
+                          Text("Entrata: ${DateFormat('HH:mm').format(entrataDateTime)}"),
+                        if (entrataDateTime == null)
                           Text("Entrata non registrata", style: TextStyle(color: Colors.red)),
                         if (uscitaDateTime != null)
                           Text("Uscita: ${DateFormat('HH:mm').format(uscitaDateTime)}"),
                         if (uscitaDateTime == null)
                           Text("Uscita non registrata", style: TextStyle(color: Colors.red)),
+
                       ],
                     ),
+                    onTap: () {
+                      _editEntrataUscita(entrata, uscita ); // Gestisce il tocco della card
+                    },
                   ),
                 );
+
               },
             ),
           ),
