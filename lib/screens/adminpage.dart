@@ -89,11 +89,15 @@ class _AdminPageState extends State<AdminPage> {
         itemCount: _dipendenti.length,
         itemBuilder: (context, index) {
           var dipendente = _dipendenti[index];
+          // Se il nome o il cognome è "admin", salta questo elemento
+          if (dipendente['nome'] == "admin" || dipendente['cognome'] == "admin") {
+            return SizedBox.shrink(); // Ritorna un widget vuoto
+          }
           return ListTile(
             title: Text("${dipendente['nome']} ${dipendente['cognome']}"),
             subtitle: Text("Email: ${dipendente['email']}\nCF: ${dipendente['codiceFiscale']}"),
             onTap: () {
-                Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => EntrateUscitePage(
@@ -101,7 +105,6 @@ class _AdminPageState extends State<AdminPage> {
                   ),
                 ),
               );
-
             },
           );
         },

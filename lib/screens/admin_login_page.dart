@@ -37,17 +37,24 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'Inserisci la password per accedere alla pagina admin:',
-                style: TextStyle(fontSize: 16),
+              Padding(
+                padding: const EdgeInsets.only(left: 100 , right: 100),
+                child: Text(
+                  'Inserisci la password per accedere alla pagina admin:',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
               SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
+              Padding(
+                padding: const EdgeInsets.only(left: 120 , right: 120),
+                child: TextField(
+
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
               SizedBox(height: 16),
