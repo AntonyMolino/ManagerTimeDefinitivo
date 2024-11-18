@@ -204,7 +204,7 @@ class EntryExitSection extends StatelessWidget {
                         bool uscitaAperta = await DatabaseHelper.registraUscita(dipendente['id']);
                         if (!uscitaAperta) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Non hai un entrata valida da poter chiudere')),
+                            SnackBar(content: Text('Non hai un entrata valida da poter chiudere!')),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
