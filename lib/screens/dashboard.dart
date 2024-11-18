@@ -156,9 +156,11 @@ class EntryExitSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Registrazione Entrata/Uscita',
-            style: Theme.of(context).textTheme.headlineSmall,
+          Center(
+            child: Text(
+              'Registrazione Entrata/Uscita',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
           ),
           SizedBox(height: 10),
           FutureBuilder<Map<String, dynamic>>(
@@ -173,7 +175,7 @@ class EntryExitSection extends StatelessWidget {
               } else {
                 var dipendente = snapshot.data!;
                 return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Pulsante per registrare l'entrata
                     ElevatedButton.icon(
@@ -195,9 +197,10 @@ class EntryExitSection extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.indigo,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                       ),
                     ),
+                    SizedBox(width: 20.0,),
                     // Pulsante per registrare l'uscita
                     ElevatedButton.icon(
                       onPressed: () async {
@@ -217,7 +220,7 @@ class EntryExitSection extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: Colors.redAccent,
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                       ),
                     ),
                   ],
@@ -226,9 +229,11 @@ class EntryExitSection extends StatelessWidget {
             },
           ),
           SizedBox(height: 10),
-          Text(
-            'Ultima registrazione: 8:39 AM', // Può essere aggiornato con l'ora reale di registrazione, se necessario
-            style: Theme.of(context).textTheme.bodyLarge,
+          Center(
+            child: Text(
+              'Ultima registrazione: 8:39 AM', // Può essere aggiornato con l'ora reale di registrazione, se necessario
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
           ),
         ],
       ),
@@ -259,11 +264,13 @@ class HoursWorkedSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Ore di Servizio',
-            style: Theme.of(context).textTheme.headlineSmall,
+          Center(
+            child: Text(
+              'Ore di Servizio',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 30),
           Center(
             child: SizedBox(
               height: 150,
