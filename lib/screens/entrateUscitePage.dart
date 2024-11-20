@@ -53,23 +53,26 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: Text('Modifica Entrata/Uscita'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: entrataController,
-                decoration: InputDecoration(labelText: 'Ora Entrata'),
-              ),
-              TextField(
-                controller: uscitaController,
-                decoration: InputDecoration(
-                  labelText: uscita == null ? 'Aggiungi Ora Uscita' : 'Modifica Ora Uscita',
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: entrataController,
+                  decoration: InputDecoration(labelText: 'Ora Entrata'),
                 ),
-              ),
-            ],
+                TextField(
+                  controller: uscitaController,
+                  decoration: InputDecoration(
+                    labelText: uscita == null ? 'Aggiungi Ora Uscita' : 'Modifica Ora Uscita',
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(

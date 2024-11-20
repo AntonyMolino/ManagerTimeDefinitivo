@@ -37,28 +37,31 @@ class _AdminPageState extends State<AdminPage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text("Aggiungi Dipendente"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(labelText: "Nome"),
-              onChanged: (value) => nome = value,
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: "Cognome"),
-              onChanged: (value) => cognome = value,
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: "Email"),
-              onChanged: (value) => email = value,
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: "Codice Fiscale"),
-              onChanged: (value) => codiceFiscale = value,
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: InputDecoration(labelText: "Nome"),
+                onChanged: (value) => nome = value,
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: "Cognome"),
+                onChanged: (value) => cognome = value,
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: "Email"),
+                onChanged: (value) => email = value,
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: "Codice Fiscale"),
+                onChanged: (value) => codiceFiscale = value,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
