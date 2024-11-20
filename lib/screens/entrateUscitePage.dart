@@ -17,6 +17,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   List<Map<String, dynamic>> _uscite = [];
   List<Map<String, dynamic>> _dipendenti = [];
   var dipendente;
+  DateTime? _selectedDate; // Data selezionata per il filtro
 
   @override
   void initState() {
@@ -25,10 +26,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   Future<void> _fetchEntrateUscite() async {
-    // Recupera le entrate dal database
     List<Map<String, dynamic>> entrate = await DatabaseHelper.getEntrate(widget.id);
-
-    // Recupera le uscite per ogni entrata, usando l'entrataId
     List<Map<String, dynamic>> uscite = [];
     for (var entrata in entrate) {
       var uscita = await DatabaseHelper.getUsciteByEntrataId(entrata['id']);
@@ -39,7 +37,6 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       }
     }
 
-    // Recupera i dipendenti
     List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendentibyId(widget.id);
 
     setState(() {
@@ -51,13 +48,8 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   void _editEntrataUscita(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
-    // Assicurati che i valori non siano nulli e sostituisci con una stringa vuota se lo sono
-    String entrataOra = entrata['ora'] ?? ''; // Se 'ora' è null, usa una stringa vuota
-    String uscitaOra = uscita?['ora'] ?? ''; // Se 'ora' è null, usa una stringa vuota
-
-    // Inizializza i controller con valori sicuri
-    TextEditingController entrataController = TextEditingController(text: entrataOra);
-    TextEditingController uscitaController = TextEditingController(text: uscitaOra);
+    TextEditingController entrataController = TextEditingController(text: entrata['ora'] ?? '');
+    TextEditingController uscitaController = TextEditingController(text: uscita?['ora'] ?? '');
 
     showDialog(
       context: context,
@@ -82,38 +74,35 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Chiude il dialog
+                Navigator.of(context).pop();
               },
               child: Text('Annulla'),
             ),
             TextButton(
               onPressed: () async {
-                // Aggiorna l'orario di entrata nel database usando l'ID
                 await DatabaseHelper.updateEntrataById(
                   entrata['id'],
-                  entrataController.text.isEmpty ? '' : entrataController.text, // Ora di entrata
+                  entrataController.text,
                 );
 
                 if (uscita == null || uscitaController.text.isNotEmpty) {
-                  // Inserisce una nuova uscita se non esiste o se l'utente ha inserito un orario
                   if (uscita == null) {
                     await DatabaseHelper.addUscitaByData(
                       entrata['data'],
-                      uscitaController.text.isEmpty ? '' : uscitaController.text, // Ora di uscita
+                      uscitaController.text,
                       entrata['id'],
                     );
                   } else {
                     await DatabaseHelper.updateUscitaByDataOra(
                       uscita['data'],
                       uscita['ora'],
-                      uscitaController.text.isEmpty ? '' : uscitaController.text, // Ora di uscita aggiornata
+                      uscitaController.text,
                     );
                   }
                 }
 
-                // Aggiorna la UI
                 _fetchEntrateUscite();
-                Navigator.of(context).pop(); // Chiude il dialog
+                Navigator.of(context).pop();
               },
               child: Text('Salva'),
             ),
@@ -122,7 +111,6 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       },
     );
   }
-
 
   void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
     showDialog(
@@ -134,13 +122,13 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Chiude il dialog senza fare nulla
+                Navigator.of(context).pop();
               },
               child: Text('Annulla'),
             ),
             TextButton(
               onPressed: () async {
-              if(entrata != null){
+                if (entrata != null) {
                   await DatabaseHelper.deleteEntrataById(entrata['id']);
                 }
                 if (uscita != null) {
@@ -158,24 +146,50 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     );
   }
 
+  void _filterByDate(DateTime? date) {
+    setState(() {
+      _selectedDate = date;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<Map<String, dynamic>> filteredEntrate = _selectedDate != null
+        ? _entrate.where((entrata) {
+      DateTime entrataDate = DateTime.parse("${entrata['data']} ${entrata['ora']}");
+      return _selectedDate != null &&
+          DateFormat('yyyy-MM-dd').format(entrataDate) == DateFormat('yyyy-MM-dd').format(_selectedDate!);
+    }).toList()
+        : _entrate;
+
     return Scaffold(
       appBar: AppBar(
         title: dipendente != null
-            ? Text('Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}',
-          style: TextStyle(color: Colors.white),)
+            ? Text('Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}')
             : Text('Entrate/Uscite'),
         backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.calendar_today),
+            onPressed: () async {
+              DateTime? selectedDate = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+              );
+              _filterByDate(selectedDate);
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              itemCount: _entrate.length,
+              itemCount: filteredEntrate.length,
               itemBuilder: (context, index) {
-                var entrata = _entrate[index];
+                var entrata = filteredEntrate[index];
                 var uscita = _uscite.isNotEmpty && index < _uscite.length ? _uscite[index] : null;
 
                 String entrataDataOra = "${entrata['data']} ${entrata['ora']}";
@@ -186,26 +200,20 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
                 return Card(
                   child: ListTile(
-                    title: Text("Data: ${entrataDateTime != null ? DateFormat('dd-MM-yyyy').format(entrataDateTime) : 'Data non disponibile'}"),
+                    title: Text(
+                      "Data: ${entrataDateTime != null ? DateFormat('dd-MM-yyyy').format(entrataDateTime) : 'Data non disponibile'}",
+                    ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (entrataDateTime != null)
                           Text("Entrata: ${DateFormat('HH:mm').format(entrataDateTime)}"),
-                        if (entrataDateTime == null)
-                          Text("Entrata non registrata", style: TextStyle(color: Colors.red)),
                         if (uscitaDateTime != null)
                           Text("Uscita: ${DateFormat('HH:mm').format(uscitaDateTime)}"),
-                        if (uscitaDateTime == null)
-                          Text("Uscita non registrata", style: TextStyle(color: Colors.red)),
                       ],
                     ),
-                    onTap: () {
-                      _editEntrataUscita(entrata, uscita);
-                    },
-                    onLongPress: () {
-                      _confirmDelete(entrata, uscita);
-                    },
+                    onTap: () => _editEntrataUscita(entrata, uscita),
+                    onLongPress: () => _confirmDelete(entrata, uscita),
                   ),
                 );
               },
@@ -216,22 +224,13 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     );
   }
 
-  // Funzione per tentare di fare il parse della data, restituendo null in caso di errore
-  // Funzione per tentare di fare il parse della data, restituendo null in caso di errore
   DateTime? _parseDateTime(String? dateTimeStr) {
-    if (dateTimeStr == null || dateTimeStr.isEmpty) {
-      // Se la stringa è null o vuota, non tentare di fare il parse
-      return null;
-    }
-
+    if (dateTimeStr == null || dateTimeStr.isEmpty) return null;
     try {
-      // Se la stringa non è vuota, tentiamo di fare il parse
       return DateTime.parse(dateTimeStr);
     } catch (e) {
-      // Se c'è un errore nel parsing, restituire null
       print('Errore nel parsing della data/ora: $e');
       return null;
     }
   }
-
 }
