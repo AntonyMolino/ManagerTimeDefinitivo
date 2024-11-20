@@ -78,8 +78,8 @@ class _AdminPageState extends State<AdminPage> {
               child: Text('Annulla'),
             ),
             TextButton(
-              onPressed: () {
-                // Logica per salvare i dati
+              onPressed: () async {
+                await _addDipendente(nome, cognome, email, codiceFiscale);
                 Navigator.of(context).pop(); // Chiude il dialogo dopo aver salvato
               },
               child: Text('Salva'),
