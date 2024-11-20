@@ -40,7 +40,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     }
 
     // Recupera i dipendenti
-    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendentiById(widget.id);
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendentibyId(widget.id);
 
     setState(() {
       _entrate = entrate;
