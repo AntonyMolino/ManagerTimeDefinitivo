@@ -71,16 +71,6 @@ class DatabaseHelper {
     ''');
   }
   //INSERT
-  static Future<void> insertDipendente(String nome , String cognome , String email, String codiceFiscale) async {
-    final db = await getDatabase;
-    await db.insert('Dipendenti', {
-      'nome': nome,
-      'cognome': cognome,
-      'email': email,
-      'codiceFiscale': codiceFiscale,
-      'hash': "",
-    });
-  }
 
 
   static Future<bool> registraEntrata(int dipendenteId) async {
@@ -314,28 +304,7 @@ class DatabaseHelper {
 
 
   //GET
-  static Future<List<Map<String, dynamic>>> getDipendenti() async {
-    final db = await getDatabase;
-    return await db.query('Dipendenti');
 
-  }
-  static Future<List<Map<String, dynamic>>> getDipendentibyCodiceFiscale(String codiceFiscale) async {
-    final db = await getDatabase;
-    return await db.query(
-      'Dipendenti',
-      where: 'codiceFiscale = ?',
-      whereArgs: [codiceFiscale],
-    );
-  }
-
-  static Future<List<Map<String, dynamic>>> getDipendentibyId(int id) async {
-    final db = await getDatabase;
-    return await db.query(
-      'Dipendenti',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
 
   static Future<List<Map<String, dynamic>>> getEntrate(int dipendenteId) async {
     final db = await getDatabase;

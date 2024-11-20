@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
+import 'package:managertime/db/Dipendente.dart';
 
 class HomePage extends StatelessWidget {
   final String codiceFiscale;
@@ -55,7 +56,7 @@ class WelcomeSection extends StatelessWidget {
 
   Future<Map<String, dynamic>> getDipendente() async {
     var dipendente;
-    List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenti();
     for (var record in dipendenti) {
       if (record['codiceFiscale'] == codiceFiscale) {
         dipendente = record;
@@ -128,7 +129,7 @@ class EntryExitSection extends StatelessWidget {
 
   Future<Map<String, dynamic>> getDipendente() async {
     var dipendente;
-    List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenti();
     for (var record in dipendenti) {
       if (record['codiceFiscale'] == codiceFiscale) {
         dipendente = record;

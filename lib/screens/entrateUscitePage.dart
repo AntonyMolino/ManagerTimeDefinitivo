@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:managertime/db/Dipendente.dart';
 import '../db/DatabaseHelper.dart';
 
 class EntrateUscitePage extends StatefulWidget {
@@ -39,7 +40,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     }
 
     // Recupera i dipendenti
-    List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendentibyId(widget.id);
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendentiById(widget.id);
 
     setState(() {
       _entrate = entrate;

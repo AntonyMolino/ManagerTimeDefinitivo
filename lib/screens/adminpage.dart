@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:managertime/db/DatabaseHelper.dart';
+import 'package:managertime/db/Dipendente.dart';
 import 'package:managertime/screens/entrateUscitePage.dart';
+import '';
 
 class AdminPage extends StatefulWidget {
   @override
@@ -17,14 +18,14 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Future<void> _fetchDipendenti() async {
-    List<Map<String, dynamic>> dipendenti = await DatabaseHelper.getDipendenti();
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenti();
     setState(() {
       _dipendenti = dipendenti;
     });
   }
 
   Future<void> _addDipendente(String nome, String cognome, String email, String codiceFiscale) async {
-    await DatabaseHelper.insertDipendente(nome, cognome, email, codiceFiscale);
+    await Dipendente.insertDipendente(nome, cognome, email, codiceFiscale);
     _fetchDipendenti();
   }
 
