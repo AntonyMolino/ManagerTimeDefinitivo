@@ -38,51 +38,64 @@ class _AdminPageState extends State<AdminPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text("Aggiungi Dipendente"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: InputDecoration(labelText: "Nome"),
-                onChanged: (value) => nome = value,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Modifica Dati'),
+          content: SingleChildScrollView( // Aggiunge il supporto per lo scrolling
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Il Column prenderà solo lo spazio necessario
+                children: [
+                  TextField(
+                    decoration: InputDecoration(labelText: "Nome"),
+                    onChanged: (value) => nome = value,
+                  ),
+                  SizedBox(height: 8.0), // Distanza tra i campi
+                  TextField(
+                    decoration: InputDecoration(labelText: "Cognome"),
+                    onChanged: (value) => cognome = value,
+                  ),
+                  SizedBox(height: 8.0),
+                  TextField(
+                    decoration: InputDecoration(labelText: "Email"),
+                    onChanged: (value) => email = value,
+                  ),
+                  SizedBox(height: 8.0),
+                  TextField(
+                    decoration: InputDecoration(labelText: "Codice Fiscale"),
+                    onChanged: (value) => codiceFiscale = value,
+                  ),
+                ],
               ),
-              TextField(
-                decoration: InputDecoration(labelText: "Cognome"),
-                onChanged: (value) => cognome = value,
-              ),
-              TextField(
-                decoration: InputDecoration(labelText: "Email"),
-                onChanged: (value) => email = value,
-              ),
-              TextField(
-                decoration: InputDecoration(labelText: "Codice Fiscale"),
-                onChanged: (value) => codiceFiscale = value,
-              ),
-            ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            child: Text("Annulla"),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          ElevatedButton(
-            child: Text("Aggiungi"),
-            onPressed: () async {
-              await _addDipendente(nome, cognome, email, codiceFiscale);
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Chiude il dialogo
+              },
+              child: Text('Annulla'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Logica per salvare i dati
+                Navigator.of(context).pop(); // Chiude il dialogo dopo aver salvato
+              },
+              child: Text('Salva'),
+            ),
+          ],
+        );
+      },
     );
+
+
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text('Admin - Gestione Dipendenti',
         style: TextStyle(color: Colors.white),),

@@ -57,22 +57,24 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       builder: (context) {
         return AlertDialog(
           title: Text('Modifica Entrata/Uscita'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: TextField(
                   controller: entrataController,
                   decoration: InputDecoration(labelText: 'Ora Entrata'),
                 ),
-                TextField(
+              ),
+              Flexible(
+                child: TextField(
                   controller: uscitaController,
                   decoration: InputDecoration(
                     labelText: uscita == null ? 'Aggiungi Ora Uscita' : 'Modifica Ora Uscita',
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -118,35 +120,63 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Conferma Eliminazione'),
-          content: Text('Sei sicuro di voler eliminare questa entrata e la relativa uscita (se presente)?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Annulla'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (entrata != null) {
-                  await DatabaseHelper.deleteEntrataById(entrata['id']);
-                }
-                if (uscita != null) {
-                  await DatabaseHelper.deleteUscitaById(uscita['id']);
-                }
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 30),  // Aggiungi spazio sui lati
+          child: Builder(
+            builder: (context) {
+              return Container(
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // Aggiungi questa proprietà
+                      children: [
+                        Text(
+                          'Sei sicuro di voler eliminare questa entrata e la relativa uscita (se presente)?',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('Annulla'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                if (entrata != null) {
+                                  await DatabaseHelper.deleteEntrataById(entrata['id']);
+                                }
+                                if (uscita != null) {
+                                  await DatabaseHelper.deleteUscitaById(uscita['id']);
+                                }
 
-                _fetchEntrateUscite();
-                Navigator.of(context).pop();
-              },
-              child: Text('Elimina', style: TextStyle(color: Colors.red)),
-            ),
-          ],
+                                _fetchEntrateUscite();
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(
+                                'Elimina',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         );
       },
     );
+
   }
 
   void _filterByDate(DateTime? date) {
