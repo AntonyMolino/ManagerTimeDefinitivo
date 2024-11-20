@@ -165,12 +165,13 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     return Scaffold(
       appBar: AppBar(
         title: dipendente != null
-            ? Text('Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}')
+            ? Text('Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}',style: TextStyle(color: Colors.white))
             : Text('Entrate/Uscite'),
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(Icons.calendar_today),
+            icon: Icon(Icons.calendar_today ,  color: Colors.white,),
             onPressed: () async {
               DateTime? selectedDate = await showDatePicker(
                 context: context,
