@@ -222,16 +222,21 @@ class HoursWorkedSection extends StatelessWidget {
 
   HoursWorkedSection({required this.codiceFiscale});
 
-  Future<int> calcolaOreLavorate() async {
+    Future<int> calcolaOreLavorate() async {
     List<Map<String, dynamic>> logs = await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
+
     int oreLavorate = 0;
-    for (int i = 0; i < logs.length; i++) {
-      if (logs[i]['tipo'] == 'uscita' && i > 0 && logs[i - 1]['tipo'] == 'entrata') {
-        DateTime entrata = DateTime.parse(logs[i - 1]['orario']);
-        DateTime uscita = DateTime.parse(logs[i]['orario']);
+
+    for (var log in logs) {
+
+      if (log['oraEntrata'] != null && log['oraUscita'] != null && log['data'] != null) {
+
+        DateTime entrata = DateTime.parse('${log['data']}T${log['oraEntrata']}');
+        DateTime uscita = DateTime.parse('${log['data']}T${log['oraUscita']}');
         oreLavorate += uscita.difference(entrata).inHours;
       }
     }
+
     return oreLavorate;
   }
 
@@ -338,11 +343,13 @@ class EntryExitLogsSection extends StatelessWidget {
                   itemCount: logs.length,
                   itemBuilder: (context, index) {
                     var log = logs[index];
+                    var data = DateTime.parse(log['data']);
+                    var dataDef = DateFormat('dd-MM-yyyy').format(data).toString();
                     return Card(
                       margin: EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
                         contentPadding: EdgeInsets.all(16),
-                        title: Text('${log['nome']} ${log['cognome']}'),
+                        title: Text(dataDef),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

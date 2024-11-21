@@ -203,13 +203,15 @@ class DatabaseHelper {
       return [];
     }
     int idDipendente = dipendente.first['id'];  // Ottieni l'id del dipendente
-
+    var now = DateTime.now();
+    final data = DateFormat("yyyy-MM-dd").format(now);
     // Query con JOIN tra la tabella entrate, uscite e dipendenti
     return await db.rawQuery('''
         SELECT 
         entrate.id ,
         entrate.dipendenteEntr,
         entrate.ora as oraEntrata,
+        entrate.data as data,
         uscite.id as uscita_id,
         uscite.ora as oraUscita,
         Dipendenti.codiceFiscale,
@@ -218,9 +220,9 @@ class DatabaseHelper {
       FROM entrate 
       LEFT JOIN uscite  ON entrate.uscitaId = uscite.id
       INNER JOIN dipendenti ON entrate.dipendenteEntr = Dipendenti.id
-      WHERE entrate.dipendenteEntr = ?
+      WHERE entrate.dipendenteEntr = ? AND entrate.data = ?
       ORDER BY oraEntrata DESC
-    ''', [idDipendente]);
+    ''', [idDipendente , data]);
   }
 
   static Future<void> updateEntrataByDataOra(String data, String oraOriginale, String nuovaOra) async {
