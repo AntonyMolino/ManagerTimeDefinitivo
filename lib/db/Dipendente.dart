@@ -90,4 +90,15 @@ class Dipendente {
       whereArgs: [id],
     );
   }
+  static Future<List<Map<String, dynamic>>> getDipendenteByCodiceFiscale(String codiceFiscale) async {
+    // Eseguiamo una query sul database per cercare un dipendente con il codice fiscale specificato
+    var db = await DatabaseHelper.getDatabase;
+    var result = await db.query(
+      'dipendenti', // Nome della tabella che contiene i dipendenti
+      where: 'codiceFiscale = ?',
+      whereArgs: [codiceFiscale],
+    );
+
+    return result;
+}
 }

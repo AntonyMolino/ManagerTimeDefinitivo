@@ -174,6 +174,54 @@ class DatabaseHelper {
     );
   }
 
+  static Future<List<Map<String, dynamic>>> getEntryExitLogs(int dipendenteId) async {
+    final db = await getDatabase;
+
+    // Recupera i log di entrata/uscita per un dipendente
+    final result = await db.rawQuery('''
+      SELECT entrate.data, entrate.ora, uscite.data as uscita_data, uscite.ora as uscita_ora, entrate.chiuso
+      FROM entrate 
+      LEFT JOIN uscite  ON e.id = uscite.entrataId
+      WHERE entrate.dipendenteEntr = ?
+      ORDER BY entrate.data DESC, entrate.ora DESC
+    ''', [dipendenteId]);
+
+    return result;
+  }
+
+  static Future<List<Map<String, dynamic>>> getLogEntrateUscite(String codiceFiscale) async {
+    final db = await getDatabase;
+    List<Map<String, dynamic>> dipendente = await db.query(
+        'dipendenti',
+        columns: ['id'],
+        where: 'codiceFiscale = ?',
+        whereArgs: [codiceFiscale]
+    );
+
+    if (dipendente.isEmpty) {
+      // Se non viene trovato il dipendente con il codice fiscale, restituisci un elenco vuoto
+      return [];
+    }
+    int idDipendente = dipendente.first['id'];  // Ottieni l'id del dipendente
+
+    // Query con JOIN tra la tabella entrate, uscite e dipendenti
+    return await db.rawQuery('''
+        SELECT 
+        entrate.id ,
+        entrate.dipendenteEntr,
+        entrate.ora as oraEntrata,
+        uscite.id as uscita_id,
+        uscite.ora as oraUscita,
+        Dipendenti.codiceFiscale,
+        Dipendenti.nome,
+        Dipendenti.cognome
+      FROM entrate 
+      LEFT JOIN uscite  ON entrate.uscitaId = uscite.id
+      INNER JOIN dipendenti ON entrate.dipendenteEntr = Dipendenti.id
+      WHERE entrate.dipendenteEntr = ?
+      ORDER BY oraEntrata DESC
+    ''', [idDipendente]);
+  }
 
   static Future<void> updateEntrataByDataOra(String data, String oraOriginale, String nuovaOra) async {
     final db = await getDatabase;

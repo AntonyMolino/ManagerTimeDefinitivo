@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 import 'package:managertime/db/Dipendente.dart';
 
@@ -38,11 +39,20 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Sezione di benvenuto
             WelcomeSection(codiceFiscale: codiceFiscale),
             SizedBox(height: 20),
+
+            // Sezione Entrate/Uscite
             EntryExitSection(codiceFiscale: codiceFiscale),
             SizedBox(height: 20),
-            HoursWorkedSection(),
+
+            // Sezione Ore Lavorate
+            HoursWorkedSection(codiceFiscale: codiceFiscale),
+            SizedBox(height: 20),
+
+            // Log Entrate/Uscite
+            EntryExitLogsSection(codiceFiscale: codiceFiscale),
           ],
         ),
       ),
@@ -52,16 +62,14 @@ class HomePage extends StatelessWidget {
 
 class WelcomeSection extends StatelessWidget {
   final String codiceFiscale;
+
   const WelcomeSection({super.key, required this.codiceFiscale});
 
   Future<Map<String, dynamic>> getDipendente() async {
     var dipendente;
-    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenti();
-    for (var record in dipendenti) {
-      if (record['codiceFiscale'] == codiceFiscale) {
-        dipendente = record;
-        break;
-      }
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenteByCodiceFiscale(codiceFiscale);
+    if (dipendenti.isNotEmpty) {
+      dipendente = dipendenti[0];
     }
     return dipendente ?? {};
   }
@@ -73,50 +81,47 @@ class WelcomeSection extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
-        } else if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Errore: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            var dipendente = snapshot.data!;
-            return Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.indigo,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.indigo.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Benvenuto ${dipendente['nome']} ${dipendente['cognome']}",
-                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        'Buona giornata di lavoro!',
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Icon(Icons.person, color: Colors.white, size: 40),
-                ],
-              ),
-            );
-          } else {
-            return Center(child: Text('Nessun dipendente trovato'));
-          }
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Errore: ${snapshot.error}'));
+        } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          var dipendente = snapshot.data!;
+          return Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.indigo,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.indigo.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Benvenuto ${dipendente['nome']} ${dipendente['cognome']}",
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Buona giornata di lavoro!',
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                  ],
+                ),
+                Icon(Icons.person, color: Colors.white, size: 40),
+              ],
+            ),
+          );
+        } else {
+          return Center(child: Text('Nessun dipendente trovato'));
         }
-        return SizedBox.shrink();
       },
     );
   }
@@ -128,15 +133,8 @@ class EntryExitSection extends StatelessWidget {
   EntryExitSection({required this.codiceFiscale});
 
   Future<Map<String, dynamic>> getDipendente() async {
-    var dipendente;
-    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenti();
-    for (var record in dipendenti) {
-      if (record['codiceFiscale'] == codiceFiscale) {
-        dipendente = record;
-        break;
-      }
-    }
-    return dipendente ?? {}; // Restituisce una mappa vuota se non trovato
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenteByCodiceFiscale(codiceFiscale);
+    return dipendenti.isNotEmpty ? dipendenti[0] : {};
   }
 
   @override
@@ -178,39 +176,22 @@ class EntryExitSection extends StatelessWidget {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Pulsante per registrare l'entrata
                     ElevatedButton.icon(
                       onPressed: () async {
-                        // Recupera l'ultima entrata aperta (se esiste)
                         Map<String, dynamic>? ultimaEntrata = await DatabaseHelper.getUltimaEntrataAperta(dipendente['id']);
-
                         if (ultimaEntrata == null) {
-                          // Non ci sono entrate aperte, registra una nuova entrata
                           bool entrataRegistrata = await DatabaseHelper.registraEntrata(dipendente['id']);
-                          if (entrataRegistrata) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Entrata registrata con successo!')),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Errore nella registrazione dell\'entrata. Contatta un admin!')),
-                            );
-                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(entrataRegistrata ? 'Entrata registrata con successo!' : 'Errore nella registrazione dell\'entrata. Contatta un admin!'))
+                          );
                         } else {
-                          // Esiste un'entrata aperta, registra l'uscita
                           bool uscitaRegistrata = await DatabaseHelper.registraUscita(dipendente['id']);
-                          if (uscitaRegistrata) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Uscita registrata con successo!')),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Errore nella registrazione dell\'uscita. Contatta un admin!')),
-                            );
-                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(uscitaRegistrata ? 'Uscita registrata con successo!' : 'Errore nella registrazione dell\'uscita. Contatta un admin!'))
+                          );
                         }
                       },
-                      icon: Icon(Icons.login_outlined, color: Colors.white), // Icona per rappresentare entrambe le azioni
+                      icon: Icon(Icons.login_outlined, color: Colors.white),
                       label: Text('Registra Entrata/Uscita'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.indigo,
@@ -218,7 +199,6 @@ class EntryExitSection extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                       ),
                     ),
-
                   ],
                 );
               }
@@ -227,7 +207,7 @@ class EntryExitSection extends StatelessWidget {
           SizedBox(height: 10),
           Center(
             child: Text(
-              'Ultima registrazione: 8:39 AM', // Può essere aggiornato con l'ora reale di registrazione, se necessario
+              'Ultima registrazione: 8:39 AM', // Orario da aggiornare dinamicamente
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
@@ -237,11 +217,24 @@ class EntryExitSection extends StatelessWidget {
   }
 }
 
-
-
-
-
 class HoursWorkedSection extends StatelessWidget {
+  final String codiceFiscale;
+
+  HoursWorkedSection({required this.codiceFiscale});
+
+  Future<int> calcolaOreLavorate() async {
+    List<Map<String, dynamic>> logs = await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
+    int oreLavorate = 0;
+    for (int i = 0; i < logs.length; i++) {
+      if (logs[i]['tipo'] == 'uscita' && i > 0 && logs[i - 1]['tipo'] == 'entrata') {
+        DateTime entrata = DateTime.parse(logs[i - 1]['orario']);
+        DateTime uscita = DateTime.parse(logs[i]['orario']);
+        oreLavorate += uscita.difference(entrata).inHours;
+      }
+    }
+    return oreLavorate;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -262,50 +255,108 @@ class HoursWorkedSection extends StatelessWidget {
         children: [
           Center(
             child: Text(
-              'Ore di Servizio',
+              'Ore Lavorate',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
           ),
-          SizedBox(height: 30),
-          Center(
-            child: SizedBox(
-              height: 150,
-              child: PieChart(
-                PieChartData(
-                  sections: [
-                    PieChartSectionData(
-                      color: Colors.indigo,
-                      value: 75,
-                      title: '75%',
-                      radius: 50,
-                      titleStyle: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    PieChartSectionData(
-                      color: Colors.grey[300]!,
-                      value: 25,
-                      title: '25%',
-                      radius: 50,
-                      titleStyle: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          SizedBox(height: 10),
+          FutureBuilder<int>(
+            future: calcolaOreLavorate(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Errore: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                int oreLavorate = snapshot.data!;
+                return Center(
+                  child: Text(
+                    'Ore lavorate totali: $oreLavorate ore',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                );
+              } else {
+                return Center(child: Text('Nessun dato disponibile.'));
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class EntryExitLogsSection extends StatelessWidget {
+  final String codiceFiscale;
+
+  EntryExitLogsSection({required this.codiceFiscale});
+
+  Future<List<Map<String, dynamic>>> getLogs() async {
+    return await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Titolo della sezione
+          Text(
+            'Log Entrate/Uscite',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 10),
-          Center(
-            child: Text(
-              'Totale ore: 6 su 8 ore di servizio',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+          SizedBox(height: 16),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: getLogs(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Errore nel recupero dei log.'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(child: Text('Nessun log trovato.'));
+              } else {
+                List<Map<String, dynamic>> logs = snapshot.data!;
+                return ListView.builder(
+                  shrinkWrap: true,  // Risolve il problema di overflow con i log
+                  itemCount: logs.length,
+                  itemBuilder: (context, index) {
+                    var log = logs[index];
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 8),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.all(16),
+                        title: Text('${log['nome']} ${log['cognome']}'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Entrata: ${log['oraEntrata']}'),
+                            Text('Uscita: ${log['oraUscita']}'),
+                          ],
+                        ),
+                        trailing: Text('Codice Fiscale: ${log['codiceFiscale']}'),
+                      ),
+                    );
+                  },
+                );
+              }
+            },
           ),
         ],
       ),
