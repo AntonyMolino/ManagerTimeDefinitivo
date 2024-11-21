@@ -130,6 +130,20 @@ class DatabaseHelper {
 
     return null; // Se non trovi nessuna entrata, restituisci null
   }
+  static Future<Map<String, dynamic>?> getUltimaEntrataAperta(int dipendenteId) async {
+    final db = await getDatabase;
+     final result = await db.rawQuery('''
+    SELECT entrate.id, entrate.dipendenteEntr, entrate.data
+    FROM entrate 
+    LEFT JOIN uscite  ON entrate.uscitaId = uscite.entrataId
+    WHERE entrate.dipendenteEntr = ? AND uscite.id IS NULL
+    ORDER BY entrate.data DESC
+    LIMIT 1
+  ''', [dipendenteId]);
+
+    return result.isNotEmpty ? result.first : null;
+  }
+
 
   static Future<void> chiudiUltimaEntrata(int dipendenteId) async {
     final db = await getDatabase;
@@ -195,42 +209,56 @@ class DatabaseHelper {
 
 
   static Future<bool> registraUscita(int dipendenteId) async {
-    // Controlla se esiste un'entrata aperta per il dipendente
-    final entrataApertaId = await checkEntrataAperta(dipendenteId);
+    try {
+      // Controlla se esiste un'entrata aperta
+      final entrataApertaId = await checkEntrataAperta(dipendenteId);
+      if (entrataApertaId == null) {
+        print("Errore nella registrazione dell'uscita: nessuna entrata aperta trovata.");
+        return false;
+      }
 
-    if (entrataApertaId == null) {
-      // Nessuna entrata aperta, non permette di registrare un'uscita
+      print("Entrata aperta trovata: ID $entrataApertaId");
+
+      final db = await getDatabase;
+      final dataOraCorrente = DateTime.now();
+      final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
+      final ora = DateFormat("HH:mm").format(dataOraCorrente);
+
+      // Inserisci l'uscita
+      final uscitaId = await db.insert('uscite', {
+        'dipendenteUsc': dipendenteId,
+        'data': data,
+        'ora': ora,
+        'chiuso': 1,
+        'entrataId': entrataApertaId,
+      });
+
+      if (uscitaId > 0) {
+        print("Uscita registrata con ID $uscitaId");
+
+        // Aggiorna l'entrata associata
+        await db.update(
+          'entrate',
+          {
+            'chiuso': 1,
+            'uscitaId': uscitaId,
+          },
+          where: 'id = ?',
+          whereArgs: [entrataApertaId],
+        );
+
+        print("Entrata aggiornata con l'uscita ID $uscitaId.");
+        return true;
+      } else {
+        print("Errore durante l'inserimento dell'uscita.");
+        return false;
+      }
+    } catch (e) {
+      print('Errore in registraUscita: $e');
       return false;
     }
-
-    final db = await getDatabase;
-    var dataOraCorrente = DateTime.now();
-    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
-    final ora = DateFormat("HH:mm").format(dataOraCorrente);
-
-    // Inserisci l'uscita con l'entrataId
-    final uscitaId = await db.insert('uscite', {
-      'dipendenteUsc': dipendenteId,
-      'data': data,
-      'ora': ora,
-      'chiuso': 1, // Indica che l'uscita è chiusa
-      'entrataId': entrataApertaId, // Associa l'uscita all'entrata aperta
-    });
-
-    // Ora aggiorna l'entrata per associare l'uscita
-    await db.update(
-      'entrate',
-      {
-        'chiuso': 1, // Indica che l'entrata è chiusa
-        'uscitaId': uscitaId, // Collega l'uscita appena registrata
-      },
-      where: 'id = ?',
-      whereArgs: [entrataApertaId],
-    );
-
-    print("Uscita registrata e collegata all'entrata");
-    return true;
   }
+
 
 
 
@@ -258,25 +286,32 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
-  static Future<Object?> checkEntrataAperta(int dipendenteId) async {
-    final db = await getDatabase;
-    var dataOraCorrente = DateTime.now();
-    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente); // Data senza l'ora
+  static Future<int?> checkEntrataAperta(int dipendenteId) async {
+    try {
+      final db = await getDatabase;
 
-    // Controlla se esiste un'entrata aperta per il dipendente nella stessa giornata
-    final result = await db.query(
-      'entrate',
-      where: 'dipendenteEntr = ? AND data = ? AND chiuso = ?',
-      whereArgs: [dipendenteId, data, 0], // chiuso = 0 significa aperto
-    );
+      final data = DateFormat("yyyy-MM-dd").format(DateTime.now());
+      final result = await db.query(
+        'entrate',
+        where: 'dipendenteEntr = ? AND data = ? AND chiuso = ?',
+        whereArgs: [dipendenteId, data, 0],
+        orderBy: 'id DESC',
+        limit: 1,
+      );
 
-    if (result.isNotEmpty) {
-      // Se c'è un'entrata aperta, restituisce l'ID dell'entrata aperta
-      return result.first['id']; // Assumendo che 'id' sia la colonna dell'ID dell'entrata
+      if (result.isNotEmpty) {
+        print('Entrata aperta trovata: ${result.first}');
+        return result.first['id'] as int;
+      } else {
+        print('Nessuna entrata aperta trovata per dipendente ID $dipendenteId');
+        return null;
+      }
+    } catch (e) {
+      print('Errore nel metodo checkEntrataAperta: $e');
+      return null;
     }
-
-    return null; // Se non ci sono entrate aperte, restituisce null
   }
+
 
 
 

@@ -181,49 +181,44 @@ class EntryExitSection extends StatelessWidget {
                     // Pulsante per registrare l'entrata
                     ElevatedButton.icon(
                       onPressed: () async {
-                        bool entrataAperta = await DatabaseHelper.registraEntrata(dipendente['id']);
-                        if (!entrataAperta) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Una entrata è già aperta per oggi. Devi segnare  prima l'uscita di registrarne una nuova. Contatta un admin!")),
-                          );
+                        // Recupera l'ultima entrata aperta (se esiste)
+                        Map<String, dynamic>? ultimaEntrata = await DatabaseHelper.getUltimaEntrataAperta(dipendente['id']);
+
+                        if (ultimaEntrata == null) {
+                          // Non ci sono entrate aperte, registra una nuova entrata
+                          bool entrataRegistrata = await DatabaseHelper.registraEntrata(dipendente['id']);
+                          if (entrataRegistrata) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Entrata registrata con successo!')),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Errore nella registrazione dell\'entrata. Contatta un admin!')),
+                            );
+                          }
                         } else {
-                          await DatabaseHelper.registraEntrata(dipendente['id']);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Entrata registrata con successo!')),
-                          );
+                          // Esiste un'entrata aperta, registra l'uscita
+                          bool uscitaRegistrata = await DatabaseHelper.registraUscita(dipendente['id']);
+                          if (uscitaRegistrata) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Uscita registrata con successo!')),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Errore nella registrazione dell\'uscita. Contatta un admin!')),
+                            );
+                          }
                         }
                       },
-                      icon: Icon(Icons.login, color: Colors.white),
-                      label: Text('Entrata'),
+                      icon: Icon(Icons.login_outlined, color: Colors.white), // Icona per rappresentare entrambe le azioni
+                      label: Text('Registra Entrata/Uscita'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.indigo,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                       ),
                     ),
-                    SizedBox(width: 20.0,),
-                    // Pulsante per registrare l'uscita
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        bool uscitaAperta = await DatabaseHelper.registraUscita(dipendente['id']);
-                        if (!uscitaAperta) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Non hai un entrata valida da poter chiudere!')),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Uscita registrata con successo!')),
-                          );
-                        }
-                      },
-                      icon: Icon(Icons.logout, color: Colors.white),
-                      label: Text('Uscita'),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.redAccent,
-                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                      ),
-                    ),
+
                   ],
                 );
               }
