@@ -400,6 +400,7 @@ class EntryExitLogsSection extends StatelessWidget {
                 } else {
                   List<Map<String, dynamic>> logs = snapshot.data!;
                   return ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
                     shrinkWrap: true,  // Risolve il problema di overflow con i log
                     itemCount: logs.length,
                     itemBuilder: (context, index) {
