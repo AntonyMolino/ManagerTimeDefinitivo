@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 import 'package:managertime/db/Dipendente.dart';
+import 'package:managertime/screens/login.dart';
 
 class HomePage extends StatelessWidget {
   final String codiceFiscale;
@@ -130,7 +133,23 @@ class WelcomeSection extends StatelessWidget {
 class EntryExitSection extends StatelessWidget {
   final String codiceFiscale;
 
+
   EntryExitSection({required this.codiceFiscale});
+
+  Future<int> calcolaOreLavorate() async {
+    List<Map<String, dynamic>> logs = await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
+    int oreLavorate = 0;
+
+    for (var log in logs) {
+      if (log['oraEntrata'] != null && log['oraUscita'] != null && log['data'] != null) {
+        DateTime entrata = DateTime.parse('${log['data']}T${log['oraEntrata']}');
+        DateTime uscita = DateTime.parse('${log['data']}T${log['oraUscita']}');
+        oreLavorate += uscita.difference(entrata).inHours;
+      }
+    }
+
+    return oreLavorate;
+  }
 
   Future<Map<String, dynamic>> getDipendente() async {
     List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenteByCodiceFiscale(codiceFiscale);
@@ -139,6 +158,7 @@ class EntryExitSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double oreTotali = 8;
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -177,18 +197,205 @@ class EntryExitSection extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton.icon(
+                      // Codice modificato per mostrare il grafico nel showDialog per l'uscita con successo
+
                       onPressed: () async {
                         Map<String, dynamic>? ultimaEntrata = await DatabaseHelper.getUltimaEntrataAperta(dipendente['id']);
+
                         if (ultimaEntrata == null) {
                           bool entrataRegistrata = await DatabaseHelper.registraEntrata(dipendente['id']);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(entrataRegistrata ? 'Entrata registrata con successo!' : 'Errore nella registrazione dell\'entrata. Contatta un admin!'))
-                          );
+                          if (entrataRegistrata) {
+                            // Successo nella registrazione dell'entrata
+                            showDialog(
+                              barrierDismissible: false,
+                              context: context,
+                              builder: (BuildContext context) {
+                                Timer(Duration(seconds: 5), () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
+                                  );
+                                });
+                                return AlertDialog(
+                                  backgroundColor: Colors.green, // Colore di sfondo (verde per il successo)
+                                  title: Text(
+                                    'Successo!',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  content: Text(
+                                    'Entrata registrata con successo!',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  //barra che scorre
+                                );
+                              },
+                            );
+                          } else {
+                            showDialog(
+                              barrierDismissible: false,
+                              context: context,
+                              builder: (BuildContext context) {
+                                Timer(Duration(seconds: 5), () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
+                                  );
+                                });
+                                return AlertDialog(
+                                  backgroundColor: Colors.red, // Colore di sfondo per errore
+                                  title: Text(
+                                    'Errore!',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  content: Text(
+                                    'Errore nella registrazione dell\'entrata. Riprovare.',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  //possibile barra che scorre
+
+
+                                );
+                              },
+                            );
+                          }
                         } else {
                           bool uscitaRegistrata = await DatabaseHelper.registraUscita(dipendente['id']);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(uscitaRegistrata ? 'Uscita registrata con successo!' : 'Errore nella registrazione dell\'uscita. Contatta un admin!'))
-                          );
+                          if (uscitaRegistrata) {
+                            // Successo nella registrazione dell'uscita, ora mostra il grafico
+                            showDialog(
+                              barrierDismissible: false,
+                              context: context,
+                              builder: (BuildContext context) {
+                                Timer(Duration(seconds: 5), () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
+                                  );
+                                });
+                                return AlertDialog(
+                                  backgroundColor: Colors.green, // Colore di sfondo (successo)
+                                  title: Text(
+                                    'Successo!',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Uscita registrata con successo!',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      SizedBox(height: 20),
+                                      FutureBuilder<int>(
+                                        future: calcolaOreLavorate(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState == ConnectionState.waiting) {
+                                            return CircularProgressIndicator();
+                                          } else if (snapshot.hasError) {
+                                            return Text('Errore nel calcolo delle ore.');
+                                          } else if (snapshot.hasData) {
+                                            int oreLavorate = snapshot.data!;
+                                            double percentualeLavorata = (oreLavorate / oreTotali) * 100;
+                                            double percentualeNonLavorata = 100 - percentualeLavorata;
+
+                                            return Column(
+                                              children: [
+                                                Container(
+                                                  width: double.infinity,
+                                                  height: 200, // Imposta un'altezza fissa
+                                                  child: PieChart(
+                                                    PieChartData(
+                                                      sections: [
+                                                        PieChartSectionData(
+                                                          value: percentualeLavorata,
+                                                          title: '${percentualeLavorata.toStringAsFixed(1)}%',
+                                                          color: Colors.indigo,
+                                                          radius: 50,
+                                                          titleStyle: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 16,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        PieChartSectionData(
+                                                          value: percentualeNonLavorata,
+                                                          title: '${percentualeNonLavorata.toStringAsFixed(1)}%',
+                                                          color: Colors.red,
+                                                          radius: 50,
+                                                          titleStyle: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 16,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(height: 20),
+                                                // Aggiunta della leggenda
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Container(
+                                                      width: 20,
+                                                      height: 20,
+                                                      color: Colors.indigo, // Colore delle ore lavorate
+                                                    ),
+                                                    SizedBox(width: 8),
+                                                    Text('Ore Lavorate', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                                    SizedBox(width: 20),
+                                                    Container(
+                                                      width: 20,
+                                                      height: 20,
+                                                      color: Colors.red, // Colore delle ore non lavorate
+                                                    ),
+                                                    SizedBox(width: 8),
+                                                    Text('Ore non lavorate', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                                  ],
+                                                ),
+                                              ],
+                                            );
+                                          } else {
+                                            return Text('Nessun dato disponibile.');
+                                          }
+                                        },
+                                      ),
+                                      //barra che scorre
+
+                                    ],
+
+                                  ),
+                                );
+                              },
+                            );
+                          } else {
+                            showDialog(
+                              barrierDismissible: false,
+                              context: context,
+                              builder: (BuildContext context) {
+                                Timer(Duration(seconds: 5), () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
+                                  );
+                                });
+                                return AlertDialog(
+                                  backgroundColor: Colors.red, // Colore di sfondo per errore
+                                  title: Text(
+                                    'Errore!',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  content: Text(
+                                    'Errore nella registrazione dell\'uscita. Riprovare.',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  //barra che scorre
+
+                                );
+                              },
+                            );
+                          }
                         }
                       },
                       icon: Icon(Icons.login_outlined, color: Colors.white),
@@ -219,7 +426,7 @@ class EntryExitSection extends StatelessWidget {
 
 class HoursWorkedSection extends StatelessWidget {
   final String codiceFiscale;
-  final double oreTotali = 8;
+
 
   HoursWorkedSection({required this.codiceFiscale});
 
@@ -240,6 +447,7 @@ class HoursWorkedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double oreTotali = 8;
     return FutureBuilder<int>(
       future: calcolaOreLavorate(),
       builder: (context, snapshot) {
@@ -283,61 +491,60 @@ class HoursWorkedSection extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
                 // Assicurati di fornire una dimensione al PieChart per evitare errori
-                Container(
-                  width: double.infinity,  // Imposta la larghezza al 100% del contenitore genitore
-                  height: 200,  // Imposta un'altezza fissa per il PieChart
-                  child: PieChart(
-                    PieChartData(
-
-                      sections: [
-                        PieChartSectionData(
-                          value: percentualeLavorata,
-                          title: '${percentualeLavorata.toStringAsFixed(1)}%',
-                          color: Colors.indigo,
-                          radius: 50,
-                          titleStyle: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        PieChartSectionData(
-                          value: percentualeNonLavorata,
-                          title: '${percentualeNonLavorata.toStringAsFixed(1)}%',
-                          color: Colors.red,
-                          radius: 50,
-                          titleStyle: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      color: Colors.indigo, // Colore delle ore lavorate
-                    ),
-                    SizedBox(width: 8),
-                    Text('Ore Lavorate', style: TextStyle(fontSize: 16)),
-                    SizedBox(width: 20),
-                    Container(
-                      width: 20,
-                      height: 20,
-                      color: Colors.red, // Colore delle ore non lavorate
-                    ),
-                    SizedBox(width: 8),
-                    Text('Ore non lavorate', style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-
+                // Container(
+                //   width: double.infinity,  // Imposta la larghezza al 100% del contenitore genitore
+                //   height: 200,  // Imposta un'altezza fissa per il PieChart
+                //   child: PieChart(
+                //     PieChartData(
+                //
+                //       sections: [
+                //         PieChartSectionData(
+                //           value: percentualeLavorata,
+                //           title: '${percentualeLavorata.toStringAsFixed(1)}%',
+                //           color: Colors.indigo,
+                //           radius: 50,
+                //           titleStyle: TextStyle(
+                //             color: Colors.white,
+                //             fontSize: 16,
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //         ),
+                //         PieChartSectionData(
+                //           value: percentualeNonLavorata,
+                //           title: '${percentualeNonLavorata.toStringAsFixed(1)}%',
+                //           color: Colors.red,
+                //           radius: 50,
+                //           titleStyle: TextStyle(
+                //             color: Colors.white,
+                //             fontSize: 16,
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
+                // SizedBox(height: 10),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     Container(
+                //       width: 20,
+                //       height: 20,
+                //       color: Colors.indigo, // Colore delle ore lavorate
+                //     ),
+                //     SizedBox(width: 8),
+                //     Text('Ore Lavorate', style: TextStyle(fontSize: 16)),
+                //     SizedBox(width: 20),
+                //     Container(
+                //       width: 20,
+                //       height: 20,
+                //       color: Colors.red, // Colore delle ore non lavorate
+                //     ),
+                //     SizedBox(width: 8),
+                //     Text('Ore non lavorate', style: TextStyle(fontSize: 16)),
+                //   ],
+                // ),
               ],
             ),
           );
