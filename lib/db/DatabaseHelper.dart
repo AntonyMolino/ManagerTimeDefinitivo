@@ -221,7 +221,7 @@ class DatabaseHelper {
       LEFT JOIN uscite  ON entrate.uscitaId = uscite.id
       INNER JOIN dipendenti ON entrate.dipendenteEntr = Dipendenti.id
       WHERE entrate.dipendenteEntr = ? AND entrate.data = ?
-      ORDER BY oraEntrata DESC
+      ORDER BY oraEntrata ASC
     ''', [idDipendente , data]);
   }
 

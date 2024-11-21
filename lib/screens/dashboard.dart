@@ -219,18 +219,16 @@ class EntryExitSection extends StatelessWidget {
 
 class HoursWorkedSection extends StatelessWidget {
   final String codiceFiscale;
+  final double oreTotali = 8;
 
   HoursWorkedSection({required this.codiceFiscale});
 
-    Future<int> calcolaOreLavorate() async {
+  Future<int> calcolaOreLavorate() async {
     List<Map<String, dynamic>> logs = await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
-
     int oreLavorate = 0;
 
     for (var log in logs) {
-
       if (log['oraEntrata'] != null && log['oraUscita'] != null && log['data'] != null) {
-
         DateTime entrata = DateTime.parse('${log['data']}T${log['oraEntrata']}');
         DateTime uscita = DateTime.parse('${log['data']}T${log['oraUscita']}');
         oreLavorate += uscita.difference(entrata).inHours;
@@ -242,54 +240,116 @@ class HoursWorkedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(
-              'Ore Lavorate',
-              style: Theme.of(context).textTheme.headlineSmall,
+    return FutureBuilder<int>(
+      future: calcolaOreLavorate(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Errore: ${snapshot.error}'));
+        } else if (snapshot.hasData) {
+          int oreLavorate = snapshot.data!;
+          double percentualeLavorata = (oreLavorate / oreTotali) * 100;
+          double percentualeNonLavorata = 100 - percentualeLavorata;
+
+          return Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
             ),
-          ),
-          SizedBox(height: 10),
-          FutureBuilder<int>(
-            future: calcolaOreLavorate(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Errore: ${snapshot.error}'));
-              } else if (snapshot.hasData) {
-                int oreLavorate = snapshot.data!;
-                return Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Text(
+                    'Ore Lavorate',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ),
+
+                Center(
                   child: Text(
                     'Ore lavorate totali: $oreLavorate ore',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
-                );
-              } else {
-                return Center(child: Text('Nessun dato disponibile.'));
-              }
-            },
-          ),
-        ],
-      ),
+                ),
+                SizedBox(height: 10),
+                // Assicurati di fornire una dimensione al PieChart per evitare errori
+                Container(
+                  width: double.infinity,  // Imposta la larghezza al 100% del contenitore genitore
+                  height: 200,  // Imposta un'altezza fissa per il PieChart
+                  child: PieChart(
+                    PieChartData(
+
+                      sections: [
+                        PieChartSectionData(
+                          value: percentualeLavorata,
+                          title: '${percentualeLavorata.toStringAsFixed(1)}%',
+                          color: Colors.indigo,
+                          radius: 50,
+                          titleStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        PieChartSectionData(
+                          value: percentualeNonLavorata,
+                          title: '${percentualeNonLavorata.toStringAsFixed(1)}%',
+                          color: Colors.red,
+                          radius: 50,
+                          titleStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      color: Colors.indigo, // Colore delle ore lavorate
+                    ),
+                    SizedBox(width: 8),
+                    Text('Ore Lavorate', style: TextStyle(fontSize: 16)),
+                    SizedBox(width: 20),
+                    Container(
+                      width: 20,
+                      height: 20,
+                      color: Colors.red, // Colore delle ore non lavorate
+                    ),
+                    SizedBox(width: 8),
+                    Text('Ore non lavorate', style: TextStyle(fontSize: 16)),
+                  ],
+                ),
+
+              ],
+            ),
+          );
+        } else {
+          return Center(child: Text('Nessun dato disponibile.'));
+        }
+      },
     );
   }
 }
+
+
 
 class EntryExitLogsSection extends StatelessWidget {
   final String codiceFiscale;
@@ -319,51 +379,53 @@ class EntryExitLogsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Titolo della sezione
-          Text(
-            'Log Entrate/Uscite',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          Center(
+            child: Text(
+              'Log Entrate/Uscite',
+              style: Theme.of(context).textTheme.headlineSmall
             ),
           ),
           SizedBox(height: 16),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: getLogs(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Errore nel recupero dei log.'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('Nessun log trovato.'));
-              } else {
-                List<Map<String, dynamic>> logs = snapshot.data!;
-                return ListView.builder(
-                  shrinkWrap: true,  // Risolve il problema di overflow con i log
-                  itemCount: logs.length,
-                  itemBuilder: (context, index) {
-                    var log = logs[index];
-                    var data = DateTime.parse(log['data']);
-                    var dataDef = DateFormat('dd-MM-yyyy').format(data).toString();
-                    return Card(
-                      margin: EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.all(16),
-                        title: Text(dataDef),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Entrata: ${log['oraEntrata']}'),
-                            Text('Uscita: ${log['oraUscita']}'),
-                          ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: getLogs(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Errore nel recupero dei log.'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('Nessun log trovato.'));
+                } else {
+                  List<Map<String, dynamic>> logs = snapshot.data!;
+                  return ListView.builder(
+                    shrinkWrap: true,  // Risolve il problema di overflow con i log
+                    itemCount: logs.length,
+                    itemBuilder: (context, index) {
+                      var log = logs[index];
+                      var data = DateTime.parse(log['data']);
+                      var dataDef = DateFormat('dd-MM-yyyy').format(data).toString();
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(16),
+                          title: Text(dataDef),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Entrata: ${log['oraEntrata']}'),
+                              Text('Uscita: ${log['oraUscita']}'),
+                            ],
+                          ),
+                          trailing: Text('Codice Fiscale: ${log['codiceFiscale']}'),
                         ),
-                        trailing: Text('Codice Fiscale: ${log['codiceFiscale']}'),
-                      ),
-                    );
-                  },
-                );
-              }
-            },
+                      );
+                    },
+                  );
+                }
+              },
+            ),
           ),
         ],
       ),
