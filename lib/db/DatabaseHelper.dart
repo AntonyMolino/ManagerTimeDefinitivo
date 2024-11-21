@@ -184,13 +184,13 @@ class DatabaseHelper {
       whereArgs: [data, oraOriginale],
     );
   }
-  static Future<void> updateUscitaByDataOra(String data, String oraOriginale, String nuovaOra) async {
+  static Future<void> updateUscitaById(int uscitaId, String nuovaOra) async {
     final db = await getDatabase;
     await db.update(
       'uscite',
       {'ora': nuovaOra},
-      where: 'data = ? AND ora = ?',
-      whereArgs: [data, oraOriginale],
+      where: 'id = ?',
+      whereArgs: [uscitaId],
     );
   }
   static Future<void> addUscitaByData(String entrataData, String uscitaOra, int entrataId) async {

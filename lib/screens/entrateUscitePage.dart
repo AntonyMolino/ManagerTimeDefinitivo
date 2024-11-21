@@ -55,63 +55,62 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Modifica Entrata/Uscita'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: TextField(
-                  controller: entrataController,
-                  decoration: InputDecoration(labelText: 'Ora Entrata'),
-                ),
-              ),
-              Flexible(
-                child: TextField(
-                  controller: uscitaController,
-                  decoration: InputDecoration(
-                    labelText: uscita == null ? 'Aggiungi Ora Uscita' : 'Modifica Ora Uscita',
+        return SingleChildScrollView(
+          child: AlertDialog(
+            title: Text('Modifica Entrata/Uscita'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                 TextField(
+                    controller: entrataController,
+                    decoration: InputDecoration(labelText: 'Ora Entrata'),
                   ),
-                ),
+               
+                  TextField(
+                    controller: uscitaController,
+                    decoration: InputDecoration(
+                      labelText: uscita == null ? 'Aggiungi Ora Uscita' : 'Modifica Ora Uscita',
+                    ),
+                  ),
+              
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Annulla'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await DatabaseHelper.updateEntrataById(
+                    entrata['id'],
+                    entrataController.text,
+                  );
+          
+                  if (uscita == null || uscitaController.text.isNotEmpty) {
+                    if (uscita == null) {
+                      await DatabaseHelper.addUscitaByData(
+                        entrata['data'],
+                        uscitaController.text,
+                        entrata['id'],
+                      );
+                    } else {
+                      await DatabaseHelper.updateUscitaById(
+                        uscita['id'],
+                        uscitaController.text,
+                      );
+                    }
+                  }
+          
+                  _fetchEntrateUscite();
+                  Navigator.of(context).pop();
+                },
+                child: Text('Salva'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Annulla'),
-            ),
-            TextButton(
-              onPressed: () async {
-                await DatabaseHelper.updateEntrataById(
-                  entrata['id'],
-                  entrataController.text,
-                );
-
-                if (uscita == null || uscitaController.text.isNotEmpty) {
-                  if (uscita == null) {
-                    await DatabaseHelper.addUscitaByData(
-                      entrata['data'],
-                      uscitaController.text,
-                      entrata['id'],
-                    );
-                  } else {
-                    await DatabaseHelper.updateUscitaByDataOra(
-                      uscita['data'],
-                      uscita['ora'],
-                      uscitaController.text,
-                    );
-                  }
-                }
-
-                _fetchEntrateUscite();
-                Navigator.of(context).pop();
-              },
-              child: Text('Salva'),
-            ),
-          ],
         );
       },
     );
