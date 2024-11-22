@@ -431,7 +431,6 @@ class HoursWorkedSection extends StatelessWidget {
   HoursWorkedSection({required this.codiceFiscale});
 
   Future<String> calcolaOreLavorate() async {
-    // Ottieni i log da database
     List<Map<String, dynamic>> logs = await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
     String stringhe = "";
     int oreTotali = 0;
@@ -447,7 +446,6 @@ class HoursWorkedSection extends StatelessWidget {
           minutiTotali += durata.inMinutes % 60;
 
           stringhe = "$oreTotali,$minutiTotali";
-
         } catch (e) {
 
           print('Errore nel parsing del log: $log, errore: $e');
