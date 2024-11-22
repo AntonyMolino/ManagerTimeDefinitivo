@@ -430,13 +430,11 @@ class HoursWorkedSection extends StatelessWidget {
 
   HoursWorkedSection({required this.codiceFiscale});
 
-  Future<String> calcolaOreLavorate() async {
+  Future<double> calcolaOreLavorate() async {
     // Ottieni i log da database
     List<Map<String, dynamic>> logs = await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
-    String stringhe = "";
-    int oreTotali = 0;
-    int minutiTotali = 0;
 
+    double s = 0;
     for (var log in logs) {
       if (log['oraEntrata'] != null && log['oraUscita'] != null && log['data'] != null) {
         try {
@@ -444,10 +442,15 @@ class HoursWorkedSection extends StatelessWidget {
           DateTime uscita = DateTime.parse('${log['data']}T${log['oraUscita']}');
 
           Duration durata = uscita.difference(entrata);
-          oreTotali += durata.inMinutes ~/ 60; // Ore intere
-          minutiTotali += durata.inMinutes % 60;
+          if(durata.inMinutes %60 == 0)
+            {
+              s += durata.inHours;
+            }
+          else
+            {
+              s+= (durata.inMinutes % 60) / 100;
 
-          stringhe = "$oreTotali,$minutiTotali";
+            }
 
         } catch (e) {
 
@@ -456,13 +459,13 @@ class HoursWorkedSection extends StatelessWidget {
       }
     }
 
-    return stringhe;
+    return s;
   }
 
   @override
   Widget build(BuildContext context) {
     final double oreTotali = 8;
-    return FutureBuilder<String>(
+    return FutureBuilder<double>(
       future: calcolaOreLavorate(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -470,10 +473,9 @@ class HoursWorkedSection extends StatelessWidget {
         } else if (snapshot.hasError) {
           return Center(child: Text('Errore: ${snapshot.error}'));
         } else if (snapshot.hasData) {
-          String oreLavorate = snapshot.data!;
-          // double percentualeLavorata = (oreLavorate / oreTotali) * 100;
+          double oreLavorate = snapshot.data!;
+          //double percentualeLavorata = (oreLavorate / oreTotali) * 100;
           // double percentualeNonLavorata = 100 - percentualeLavorata;
-
 
           return Container(
             padding: EdgeInsets.all(16),
@@ -500,7 +502,7 @@ class HoursWorkedSection extends StatelessWidget {
 
                 Center(
                   child: Text(
-                    'Ore lavorate totali: $oreLavorate  ore',
+                    'Ore lavorate totali: ${oreLavorate.toStringAsFixed(2) }  ore',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
@@ -603,8 +605,8 @@ class EntryExitLogsSection extends StatelessWidget {
           // Titolo della sezione
           Center(
             child: Text(
-              'Log Entrate/Uscite',
-              style: Theme.of(context).textTheme.headlineSmall
+                'Log Entrate/Uscite',
+                style: Theme.of(context).textTheme.headlineSmall
             ),
           ),
           SizedBox(height: 16),
