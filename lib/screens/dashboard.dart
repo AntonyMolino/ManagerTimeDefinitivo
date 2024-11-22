@@ -77,8 +77,11 @@ class WelcomeSection extends StatelessWidget {
     return dipendente ?? {};
   }
 
+
+
   @override
   Widget build(BuildContext context) {
+
     return FutureBuilder<Map<String, dynamic>>(
       future: getDipendente(),
       builder: (context, snapshot) {
@@ -133,7 +136,6 @@ class WelcomeSection extends StatelessWidget {
 class EntryExitSection extends StatelessWidget {
   final String codiceFiscale;
 
-
   EntryExitSection({required this.codiceFiscale});
 
   Future<int> calcolaOreLavorate() async {
@@ -158,6 +160,7 @@ class EntryExitSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final double oreTotali = 8;
     return Container(
       padding: EdgeInsets.all(16),
@@ -201,7 +204,6 @@ class EntryExitSection extends StatelessWidget {
 
                       onPressed: () async {
                         Map<String, dynamic>? ultimaEntrata = await DatabaseHelper.getUltimaEntrataAperta(dipendente['id']);
-
                         if (ultimaEntrata == null) {
                           bool entrataRegistrata = await DatabaseHelper.registraEntrata(dipendente['id']);
                           if (entrataRegistrata) {
@@ -210,23 +212,52 @@ class EntryExitSection extends StatelessWidget {
                               barrierDismissible: false,
                               context: context,
                               builder: (BuildContext context) {
-                                Timer(Duration(seconds: 5), () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
-                                  );
-                                });
-                                return AlertDialog(
-                                  backgroundColor: Colors.green, // Colore di sfondo (verde per il successo)
-                                  title: Text(
-                                    'Successo!',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  content: Text(
-                                    'Entrata registrata con successo!',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  //barra che scorre
+                                double progress = 0.0;
+
+                                // StatefulBuilder per aggiornare dinamicamente la UI del dialogo
+                                return StatefulBuilder(
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    // Timer per aggiornare il progresso
+                                    Timer.periodic(Duration(milliseconds: 300), (Timer timer) {
+                                      if (progress >= 1.0) {
+                                        timer.cancel(); // Ferma il timer una volta completato
+                                        Navigator.of(context).pop(); // Chiudi il dialogo
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => LoginScreen(), // Naviga alla nuova schermata
+                                          ),
+                                        );
+                                      } else {
+                                        setState(() {
+                                          progress += 0.01; // Incrementa il progresso
+                                        });
+                                      }
+                                    });
+
+                                    return AlertDialog(
+                                      backgroundColor: Colors.green, // Colore di sfondo (verde per il successo)
+                                      title: Text(
+                                        'Successo!',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Entrata registrata con successo!',
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 20),
+                                          LinearProgressIndicator(
+                                            value: progress, // Aggiorna dinamicamente il valore
+                                            backgroundColor: Colors.white.withOpacity(0.3),
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             );
@@ -235,25 +266,52 @@ class EntryExitSection extends StatelessWidget {
                               barrierDismissible: false,
                               context: context,
                               builder: (BuildContext context) {
-                                Timer(Duration(seconds: 5), () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
-                                  );
-                                });
-                                return AlertDialog(
-                                  backgroundColor: Colors.red, // Colore di sfondo per errore
-                                  title: Text(
-                                    'Errore!',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  content: Text(
-                                    'Errore nella registrazione dell\'entrata. Riprovare.',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  //possibile barra che scorre
+                                double progress = 0.0;
 
+                                // StatefulBuilder per aggiornare dinamicamente la UI del dialogo
+                                return StatefulBuilder(
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    // Timer per aggiornare il progresso
+                                    Timer.periodic(Duration(milliseconds: 300), (Timer timer) {
+                                      if (progress >= 1.0) {
+                                        timer.cancel(); // Ferma il timer una volta completato
+                                        Navigator.of(context).pop(); // Chiudi il dialogo
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => LoginScreen(), // Naviga alla nuova schermata
+                                          ),
+                                        );
+                                      } else {
+                                        setState(() {
+                                          progress += 0.01; // Incrementa il progresso
+                                        });
+                                      }
+                                    });
 
+                                    return AlertDialog(
+                                      backgroundColor: Colors.red, // Colore di sfondo (verde per il successo)
+                                      title: Text(
+                                        'Errore!',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Entrata non registrata!',
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 20),
+                                          LinearProgressIndicator(
+                                            value: progress, // Aggiorna dinamicamente il valore
+                                            backgroundColor: Colors.white.withOpacity(0.3),
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             );
@@ -266,106 +324,122 @@ class EntryExitSection extends StatelessWidget {
                               barrierDismissible: false,
                               context: context,
                               builder: (BuildContext context) {
-                                Timer(Duration(seconds: 5), () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
-                                  );
-                                });
-                                return AlertDialog(
-                                  backgroundColor: Colors.green, // Colore di sfondo (successo)
-                                  title: Text(
-                                    'Successo!',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Uscita registrata con successo!',
+                                double progress = 0.0;
+
+                                return StatefulBuilder(
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    // Timer per gestire il progresso della barra
+                                    Timer.periodic(Duration(milliseconds: 300), (Timer timer) {
+                                      if (progress >= 1.0) {
+                                        timer.cancel(); // Ferma il timer una volta completato
+                                        Navigator.of(context).pop(); // Chiude il dialogo
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
+                                        );
+                                      } else {
+                                        setState(() {
+                                          progress += 0.01; // Incrementa il progresso
+                                        });
+                                      }
+                                    });
+
+                                    return AlertDialog(
+                                      backgroundColor: Colors.green, // Colore di sfondo per il successo
+                                      title: Text(
+                                        'Successo!',
                                         style: TextStyle(color: Colors.white),
                                       ),
-                                      SizedBox(height: 20),
-                                      FutureBuilder<int>(
-                                        future: calcolaOreLavorate(),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState == ConnectionState.waiting) {
-                                            return CircularProgressIndicator();
-                                          } else if (snapshot.hasError) {
-                                            return Text('Errore nel calcolo delle ore.');
-                                          } else if (snapshot.hasData) {
-                                            int oreLavorate = snapshot.data!;
-                                            double percentualeLavorata = (oreLavorate / oreTotali) * 100;
-                                            double percentualeNonLavorata = 100 - percentualeLavorata;
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Uscita registrata con successo!',
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 20),
+                                          FutureBuilder<int>(
+                                            future: calcolaOreLavorate(),
+                                            builder: (context, snapshot) {
+                                               if (snapshot.hasError) {
+                                                return Text('Errore nel calcolo delle ore.', style: TextStyle(color: Colors.white));
+                                              } else if (snapshot.hasData) {
+                                                int oreLavorate = snapshot.data!;
+                                                double percentualeLavorata = (oreLavorate / oreTotali) * 100;
+                                                double percentualeNonLavorata = 100 - percentualeLavorata;
 
-                                            return Column(
-                                              children: [
-                                                Container(
-                                                  width: double.infinity,
-                                                  height: 200, // Imposta un'altezza fissa
-                                                  child: PieChart(
-                                                    PieChartData(
-                                                      sections: [
-                                                        PieChartSectionData(
-                                                          value: percentualeLavorata,
-                                                          title: '${percentualeLavorata.toStringAsFixed(1)}%',
-                                                          color: Colors.indigo,
-                                                          radius: 50,
-                                                          titleStyle: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 16,
-                                                            fontWeight: FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                        PieChartSectionData(
-                                                          value: percentualeNonLavorata,
-                                                          title: '${percentualeNonLavorata.toStringAsFixed(1)}%',
-                                                          color: Colors.red,
-                                                          radius: 50,
-                                                          titleStyle: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 16,
-                                                            fontWeight: FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(height: 20),
-                                                // Aggiunta della leggenda
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                return Column(
                                                   children: [
                                                     Container(
-                                                      width: 20,
-                                                      height: 20,
-                                                      color: Colors.indigo, // Colore delle ore lavorate
+                                                      width: double.infinity,
+                                                      height: 200, // Altezza del diagramma a torta
+                                                      child: PieChart(
+                                                        PieChartData(
+                                                          sections: [
+                                                            PieChartSectionData(
+                                                              value: percentualeLavorata,
+                                                              title: '${percentualeLavorata.toStringAsFixed(1)}%',
+                                                              color: Colors.indigo,
+                                                              radius: 50,
+                                                              titleStyle: TextStyle(
+                                                                color: Colors.white,
+                                                                fontSize: 16,
+                                                                fontWeight: FontWeight.bold,
+                                                              ),
+                                                            ),
+                                                            PieChartSectionData(
+                                                              value: percentualeNonLavorata,
+                                                              title: '${percentualeNonLavorata.toStringAsFixed(1)}%',
+                                                              color: Colors.red,
+                                                              radius: 50,
+                                                              titleStyle: TextStyle(
+                                                                color: Colors.white,
+                                                                fontSize: 16,
+                                                                fontWeight: FontWeight.bold,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
                                                     ),
-                                                    SizedBox(width: 8),
-                                                    Text('Ore Lavorate', style: TextStyle(fontSize: 16, color: Colors.white)),
-                                                    SizedBox(width: 20),
-                                                    Container(
-                                                      width: 20,
-                                                      height: 20,
-                                                      color: Colors.red, // Colore delle ore non lavorate
+                                                    SizedBox(height: 20),
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Container(
+                                                          width: 20,
+                                                          height: 20,
+                                                          color: Colors.indigo, // Colore delle ore lavorate
+                                                        ),
+                                                        SizedBox(width: 8),
+                                                        Text('Ore Lavorate', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                                        SizedBox(width: 20),
+                                                        Container(
+                                                          width: 20,
+                                                          height: 20,
+                                                          color: Colors.red, // Colore delle ore non lavorate
+                                                        ),
+                                                        SizedBox(width: 8),
+                                                        Text('Ore non lavorate', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                                      ],
                                                     ),
-                                                    SizedBox(width: 8),
-                                                    Text('Ore non lavorate', style: TextStyle(fontSize: 16, color: Colors.white)),
                                                   ],
-                                                ),
-                                              ],
-                                            );
-                                          } else {
-                                            return Text('Nessun dato disponibile.');
-                                          }
-                                        },
+                                                );
+                                              } else {
+                                                return Text('Nessun dato disponibile.', style: TextStyle(color: Colors.white));
+                                              }
+                                            },
+                                          ),
+                                          SizedBox(height: 20),
+                                          LinearProgressIndicator(
+                                            value: progress, // Valore dinamico per il progresso
+                                            backgroundColor: Colors.white.withOpacity(0.3),
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        ],
                                       ),
-                                      //barra che scorre
-
-                                    ],
-
-                                  ),
+                                    );
+                                  },
                                 );
                               },
                             );
@@ -410,13 +484,6 @@ class EntryExitSection extends StatelessWidget {
                 );
               }
             },
-          ),
-          SizedBox(height: 10),
-          Center(
-            child: Text(
-              'Ultima registrazione: 8:39 AM', // Orario da aggiornare dinamicamente
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
           ),
         ],
       ),

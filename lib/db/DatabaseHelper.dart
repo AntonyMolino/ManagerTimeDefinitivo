@@ -109,20 +109,17 @@ class DatabaseHelper {
     final db = await getDatabase;
 
     // Ottieni la data di oggi (per limitare la ricerca a oggi)
-    var  dataOraCorrente = DateTime.now();
-    final data = DateFormat("yyyy-MM-dd").format(dataOraCorrente);
 
 
 
     // Ottieni l'ultima entrata (ordinata per data e ora decrescente)
     final result = await db.query(
       'entrate',
-      where: 'dipendenteEntr = ? AND data = ?',
-      whereArgs: [dipendenteId , data],
+      where: 'dipendenteEntr = ? ',
+      whereArgs: [dipendenteId],
       orderBy: 'data DESC', // Ordina per data decrescente (l'ultima entrata)
       limit: 1, // Solo l'ultima entrata
     );
-
     // Se trovi un risultato, restituisci il primo
     if (result.isNotEmpty) {
       return result.first;
