@@ -218,7 +218,7 @@ class EntryExitSection extends StatelessWidget {
                                 return StatefulBuilder(
                                   builder: (BuildContext context, StateSetter setState) {
                                     // Timer per aggiornare il progresso
-                                    Timer.periodic(Duration(milliseconds: 300), (Timer timer) {
+                                    Timer.periodic(Duration(milliseconds: 200), (Timer timer) {
                                       if (progress >= 1.0) {
                                         timer.cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context).pop(); // Chiudi il dialogo
@@ -448,24 +448,52 @@ class EntryExitSection extends StatelessWidget {
                               barrierDismissible: false,
                               context: context,
                               builder: (BuildContext context) {
-                                Timer(Duration(seconds: 5), () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
-                                  );
-                                });
-                                return AlertDialog(
-                                  backgroundColor: Colors.red, // Colore di sfondo per errore
-                                  title: Text(
-                                    'Errore!',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  content: Text(
-                                    'Errore nella registrazione dell\'uscita. Riprovare.',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  //barra che scorre
+                                double progress = 0.0;
 
+                                // StatefulBuilder per aggiornare dinamicamente la UI del dialogo
+                                return StatefulBuilder(
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    // Timer per aggiornare il progresso
+                                    Timer.periodic(Duration(milliseconds: 300), (Timer timer) {
+                                      if (progress >= 1.0) {
+                                        timer.cancel(); // Ferma il timer una volta completato
+                                        Navigator.of(context).pop(); // Chiudi il dialogo
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => LoginScreen(), // Naviga alla nuova schermata
+                                          ),
+                                        );
+                                      } else {
+                                        setState(() {
+                                          progress += 0.01; // Incrementa il progresso
+                                        });
+                                      }
+                                    });
+
+                                    return AlertDialog(
+                                      backgroundColor: Colors.red, // Colore di sfondo (verde per il successo)
+                                      title: Text(
+                                        'Errore!',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Uscita non registrata!',
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 20),
+                                          LinearProgressIndicator(
+                                            value: progress, // Aggiorna dinamicamente il valore
+                                            backgroundColor: Colors.white.withOpacity(0.3),
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             );
