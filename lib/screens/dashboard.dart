@@ -430,11 +430,12 @@ class HoursWorkedSection extends StatelessWidget {
 
   HoursWorkedSection({required this.codiceFiscale});
 
-  Future<double> calcolaOreLavorate() async {
+  Future<String> calcolaOreLavorate() async {
     // Ottieni i log da database
     List<Map<String, dynamic>> logs = await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
-
-    double s = 0;
+    String stringhe = "";
+    int oreTotali = 0;
+    int minutiTotali = 0;
     for (var log in logs) {
       if (log['oraEntrata'] != null && log['oraUscita'] != null && log['data'] != null) {
         try {
@@ -442,15 +443,10 @@ class HoursWorkedSection extends StatelessWidget {
           DateTime uscita = DateTime.parse('${log['data']}T${log['oraUscita']}');
 
           Duration durata = uscita.difference(entrata);
-          if(durata.inMinutes %60 == 0)
-            {
-              s += durata.inHours;
-            }
-          else
-            {
-              s+= (durata.inMinutes % 60) / 100;
+          oreTotali += durata.inMinutes ~/ 60; // Ore intere
+          minutiTotali += durata.inMinutes % 60;
 
-            }
+          stringhe = "$oreTotali,$minutiTotali";
 
         } catch (e) {
 
@@ -459,13 +455,13 @@ class HoursWorkedSection extends StatelessWidget {
       }
     }
 
-    return s;
+    return stringhe;
   }
 
   @override
   Widget build(BuildContext context) {
-    final double oreTotali = 8;
-    return FutureBuilder<double>(
+
+    return FutureBuilder<String>(
       future: calcolaOreLavorate(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -473,9 +469,7 @@ class HoursWorkedSection extends StatelessWidget {
         } else if (snapshot.hasError) {
           return Center(child: Text('Errore: ${snapshot.error}'));
         } else if (snapshot.hasData) {
-          double oreLavorate = snapshot.data!;
-          //double percentualeLavorata = (oreLavorate / oreTotali) * 100;
-          // double percentualeNonLavorata = 100 - percentualeLavorata;
+          String oreLavorate = snapshot.data!;
 
           return Container(
             padding: EdgeInsets.all(16),
@@ -502,7 +496,7 @@ class HoursWorkedSection extends StatelessWidget {
 
                 Center(
                   child: Text(
-                    'Ore lavorate totali: ${oreLavorate.toStringAsFixed(2) }  ore',
+                    'Ore lavorate totali: $oreLavorate  ore',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
