@@ -13,35 +13,39 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   final MobileScannerController _cameraController = MobileScannerController();
   bool _isCameraPermissionGranted = false;
-  Map<String, String> _dipendentiMap = {}; // Mappa codice fiscale -> dettagli
+  Map<String, String> _dipendentiMap = {}; // Map codice fiscale -> dettagli
 
   @override
   void initState() {
     super.initState();
-    _initializeApp();
     WidgetsBinding.instance.addObserver(this);
+    _initializeApp();
   }
 
+  // Initialization methods
   Future<void> _initializeApp() async {
     await _requestCameraPermission();
     await _loadDipendentiData();
   }
 
+  // Request camera permission for scanning QR codes
   Future<void> _requestCameraPermission() async {
     final status = await Permission.camera.request();
-    if (status.isGranted) {
-      setState(() => _isCameraPermissionGranted = true);
-    } else if (status.isPermanentlyDenied) {
+    setState(() {
+      _isCameraPermissionGranted = status.isGranted;
+    });
+
+    if (status.isPermanentlyDenied) {
       await openAppSettings();
     }
   }
 
+  // Load employee data into a map for quick lookup during scanning
   Future<void> _loadDipendentiData() async {
     final dipendenti = await Dipendente.getDipendenti();
     setState(() {
       _dipendentiMap = {
-        for (var record in dipendenti)
-          record['codiceFiscale']: record['details'] ?? '',
+        for (var record in dipendenti) record['codiceFiscale']: record['details'] ?? '',
       };
     });
   }
@@ -62,34 +66,29 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Handle the scanned QR code
   Future<void> _onScan(BarcodeCapture barcodeCapture) async {
     final String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
     final isValidQR = _dipendentiMap.containsKey(scannedData);
 
     if (!isValidQR) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Codice QR non valido')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Codice QR non valido')));
       return;
     }
 
-    _cameraController.stop(); // Ferma la fotocamera prima di navigare
+    _cameraController.stop(); // Stop camera before navigation
 
+    // Navigate based on scanned QR code
     if (scannedData == "admin") {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => AdminLoginPage()),
-      );
+      await Navigator.push(context, MaterialPageRoute(builder: (context) => AdminLoginPage()));
     } else {
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(codiceFiscale: scannedData),
-        ),
+        MaterialPageRoute(builder: (context) => HomePage(codiceFiscale: scannedData)),
       );
     }
 
-    _cameraController.start(); // Riprendi la fotocamera al ritorno
+    _cameraController.start(); // Restart camera after navigation
   }
 
   @override
@@ -98,15 +97,9 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Image.asset(
-            'assets/images/logo.jpg',
-            fit: BoxFit.contain,
-          ),
+          child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
         ),
-        title: Text(
-          'Sistema di Registrazione',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text('Sistema di Registrazione', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
@@ -116,10 +109,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Scansiona il codice QR per accedere:',
-              style: TextStyle(fontSize: 18),
-            ),
+            Text('Scansiona il codice QR per accedere:', style: TextStyle(fontSize: 18)),
             SizedBox(height: 16),
             if (_isCameraPermissionGranted)
               Container(
