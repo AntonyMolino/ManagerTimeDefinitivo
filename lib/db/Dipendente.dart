@@ -58,6 +58,22 @@ class Dipendente {
     });
   }
 
+  static Future<void> updateDipendente(int id, String nome, String cognome, String email, String codiceFiscale) async {
+    final db = await DatabaseHelper.getDatabase;
+
+    await db.update(
+      'Dipendenti', // Nome della tabella
+      {
+        'nome': nome,
+        'cognome': cognome,
+        'email': email,
+        'codiceFiscale': codiceFiscale,
+      }, // Nuovi valori
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   static Future<List<Map<String, dynamic>>> getDipendenti() async {
     final db = await DatabaseHelper.getDatabase;
     return await db.query('Dipendenti');
