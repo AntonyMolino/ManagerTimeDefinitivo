@@ -206,21 +206,28 @@ class DatabaseHelper {
     // Query con JOIN tra la tabella entrate, uscite e dipendenti
     return await db.rawQuery('''
         SELECT 
-        entrate.id ,
-        entrate.dipendenteEntr,
-        entrate.ora as oraEntrata,
-        entrate.data as data,
-        uscite.id as uscita_id,
-        uscite.ora as oraUscita,
-        Dipendenti.codiceFiscale,
-        Dipendenti.nome,
-        Dipendenti.cognome
-      FROM entrate 
-      LEFT JOIN uscite  ON entrate.uscitaId = uscite.id
-      INNER JOIN dipendenti ON entrate.dipendenteEntr = Dipendenti.id
-      WHERE entrate.dipendenteEntr = ? AND entrate.data = ?
-      ORDER BY oraEntrata ASC
-    ''', [idDipendente, data]);
+    entrate.id,
+    entrate.dipendenteEntr,
+    entrate.ora AS oraEntrata,
+    entrate.data AS data,
+    uscite.id AS uscita_id,
+    uscite.ora AS oraUscita,
+    Dipendenti.codiceFiscale,
+    Dipendenti.nome,
+    Dipendenti.cognome
+FROM 
+    entrate
+LEFT JOIN 
+    uscite ON entrate.uscitaId = uscite.id
+INNER JOIN 
+    dipendenti ON entrate.dipendenteEntr = Dipendenti.id
+WHERE 
+    entrate.dipendenteEntr = ?
+    AND YEAR(entrate.data) = YEAR(CURDATE()) -- Filtra l'anno corrente
+    AND WEEK(entrate.data, 1) = WEEK(CURDATE(), 1) -- Filtra la stessa settimana
+ORDER BY 
+    entrate.ora ASC;
+    ''', [idDipendente]);
   }
 
   static Future<void> updateEntrataByDataOra(
