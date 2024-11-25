@@ -222,10 +222,10 @@ class EntryExitSection extends StatelessWidget {
                                       if (progress >= 1.0) {
                                         timer.cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context).pop(); // Chiudi il dialogo
-                                        Navigator.push(
+                                        Navigator.pushReplacement(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => LoginScreen(), // Naviga alla nuova schermata
+                                            builder: (context,) => LoginScreen(), // Naviga alla nuova schermata
                                           ),
                                         );
                                       } else {
@@ -276,7 +276,7 @@ class EntryExitSection extends StatelessWidget {
                                       if (progress >= 1.0) {
                                         timer.cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context).pop(); // Chiudi il dialogo
-                                        Navigator.push(
+                                        Navigator.pushReplacement(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => LoginScreen(), // Naviga alla nuova schermata
@@ -333,7 +333,7 @@ class EntryExitSection extends StatelessWidget {
                                       if (progress >= 1.0) {
                                         timer.cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context).pop(); // Chiude il dialogo
-                                        Navigator.push(
+                                        Navigator.pushReplacement(
                                           context,
                                           MaterialPageRoute(builder: (context) => LoginScreen()), // Naviga alla nuova pagina
                                         );
@@ -458,7 +458,7 @@ class EntryExitSection extends StatelessWidget {
                                       if (progress >= 1.0) {
                                         timer.cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context).pop(); // Chiudi il dialogo
-                                        Navigator.push(
+                                        Navigator.pushReplacement(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => LoginScreen(), // Naviga alla nuova schermata

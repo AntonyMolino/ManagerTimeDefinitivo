@@ -13,7 +13,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   final MobileScannerController _cameraController = MobileScannerController();
   bool _isCameraPermissionGranted = false;
-  Map<String, String> _dipendentiMap = {}; // Map codice fiscale -> dettagli
 
   @override
   void initState() {
@@ -25,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   // Initialization methods
   Future<void> _initializeApp() async {
     await _requestCameraPermission();
-    await _loadDipendentiData();
   }
 
   // Request camera permission for scanning QR codes
@@ -38,16 +36,6 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     if (status.isPermanentlyDenied) {
       await openAppSettings();
     }
-  }
-
-  // Load employee data into a map for quick lookup during scanning
-  Future<void> _loadDipendentiData() async {
-    final dipendenti = await Dipendente.getDipendenti();
-    setState(() {
-      _dipendentiMap = {
-        for (var record in dipendenti) record['codiceFiscale']: record['details'] ?? '',
-      };
-    });
   }
 
   @override
@@ -68,8 +56,19 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
 
   // Handle the scanned QR code
   Future<void> _onScan(BarcodeCapture barcodeCapture) async {
-    final String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
-    final isValidQR = _dipendentiMap.containsKey(scannedData);
+    String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
+    scannedData = scannedData.trim();
+    // Fetch the list of dipendenti (employees) from the database
+    final dipendenti = await Dipendente.getDipendenti();
+
+    // Search for a matching codiceFiscale
+    bool isValidQR = false;
+    for (var record in dipendenti) {
+      if (record['codiceFiscale'] == scannedData) {
+        isValidQR = true;
+        break;
+      }
+    }
 
     if (!isValidQR) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Codice QR non valido')));

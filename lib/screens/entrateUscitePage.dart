@@ -61,18 +61,41 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                 TextField(
-                    controller: entrataController,
-                    decoration: InputDecoration(labelText: 'Ora Entrata'),
-                  ),
-               
-                  TextField(
-                    controller: uscitaController,
-                    decoration: InputDecoration(
-                      labelText: uscita == null ? 'Aggiungi Ora Uscita' : 'Modifica Ora Uscita',
-                    ),
-                  ),
-              
+                // Entrata Time Picker
+                ListTile(
+                  title: Text('Ora Entrata'),
+                  subtitle: Text(entrataController.text.isEmpty ? 'Seleziona l\'ora' : entrataController.text),
+                  onTap: () async {
+                    TimeOfDay? time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(DateTime.parse("${entrata['data']} ${entrata['ora']}")),
+                    );
+                    if (time != null) {
+                      // Update the controller text immediately
+                      setState(() {
+                        entrataController.text = time.format(context); // Update controller text
+                      });
+                    }
+                  },
+                ),
+
+                // Uscita Time Picker (if needed)
+                ListTile(
+                  title: Text(uscita == null ? 'Aggiungi Ora Uscita' : 'Ora Uscita'),
+                  subtitle: Text(uscitaController.text.isEmpty ? 'Seleziona l\'ora' : uscitaController.text),
+                  onTap: () async {
+                    TimeOfDay? time = await showTimePicker(
+                      context: context,
+                      initialTime: uscita == null ? TimeOfDay.now() : TimeOfDay.fromDateTime(DateTime.parse("${uscita['data']} ${uscita['ora']}")),
+                    );
+                    if (time != null) {
+                      // Update the controller text immediately
+                      setState(() {
+                        uscitaController.text = time.format(context); // Update controller text
+                      });
+                    }
+                  },
+                ),
               ],
             ),
             actions: [
@@ -84,11 +107,13 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
               ),
               TextButton(
                 onPressed: () async {
+                  // Update Entrata with the new value in the controller
                   await DatabaseHelper.updateEntrataById(
                     entrata['id'],
                     entrataController.text,
                   );
-          
+
+                  // If Uscita is provided, update or add it
                   if (uscita == null || uscitaController.text.isNotEmpty) {
                     if (uscita == null) {
                       await DatabaseHelper.addUscitaByData(
@@ -103,7 +128,8 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                       );
                     }
                   }
-          
+
+                  // Reload data after update
                   _fetchEntrateUscite();
                   Navigator.of(context).pop();
                 },
@@ -115,6 +141,8 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       },
     );
   }
+
+
 
   void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
     showDialog(
