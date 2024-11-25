@@ -236,7 +236,7 @@ class EntryExitSection extends StatelessWidget {
                                             .cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context)
                                             .pop(); // Chiudi il dialogo
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (
@@ -304,7 +304,7 @@ class EntryExitSection extends StatelessWidget {
                                             .cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context)
                                             .pop(); // Chiudi il dialogo
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
@@ -375,7 +375,7 @@ class EntryExitSection extends StatelessWidget {
                                             .cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context)
                                             .pop(); // Chiude il dialogo
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
@@ -549,7 +549,7 @@ class EntryExitSection extends StatelessWidget {
                                             .cancel(); // Ferma il timer una volta completato
                                         Navigator.of(context)
                                             .pop(); // Chiudi il dialogo
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
