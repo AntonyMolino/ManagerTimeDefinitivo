@@ -727,7 +727,8 @@ class EntryExitLogsSection extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Entrata: ${log['oraEntrata']}'),
-                              Text('Uscita: ${log['oraUscita']}'),
+                              Text('Uscita: ${log['oraUscita']  ?? 'Non registrata'}'),
+
                             ],
                           ),
                           trailing: Text('Codice Fiscale: ${log['codiceFiscale']}'),
