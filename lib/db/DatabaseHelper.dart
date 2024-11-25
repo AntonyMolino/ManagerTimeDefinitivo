@@ -205,7 +205,7 @@ class DatabaseHelper {
     final data = DateFormat("yyyy-MM-dd").format(now);
     // Query con JOIN tra la tabella entrate, uscite e dipendenti
     return await db.rawQuery('''
-        SELECT 
+       SELECT 
     entrate.id,
     entrate.dipendenteEntr,
     entrate.ora AS oraEntrata,
@@ -223,10 +223,12 @@ INNER JOIN
     dipendenti ON entrate.dipendenteEntr = Dipendenti.id
 WHERE 
     entrate.dipendenteEntr = ?
-    AND YEAR(entrate.data) = YEAR(CURDATE()) -- Filtra l'anno corrente
-    AND WEEK(entrate.data, 1) = WEEK(CURDATE(), 1) -- Filtra la stessa settimana
+    AND strftime('%Y', entrate.data) = strftime('%Y', 'now') -- Filtra l'anno corrente
+    AND strftime('%W', entrate.data) = strftime('%W', 'now') -- Filtra la stessa settimana
 ORDER BY 
     entrate.ora ASC;
+
+
     ''', [idDipendente]);
   }
 
