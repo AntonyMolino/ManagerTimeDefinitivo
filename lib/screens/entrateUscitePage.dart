@@ -26,7 +26,8 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   Future<void> _fetchEntrateUscite() async {
-    List<Map<String, dynamic>> entrate = await DatabaseHelper.getEntrate(widget.id);
+    List<Map<String, dynamic>> entrate =
+        await DatabaseHelper.getEntrate(widget.id);
     List<Map<String, dynamic>> uscite = [];
     for (var entrata in entrate) {
       var uscita = await DatabaseHelper.getUsciteByEntrataId(entrata['id']);
@@ -37,7 +38,8 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       }
     }
 
-    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendentibyId(widget.id);
+    List<Map<String, dynamic>> dipendenti =
+        await Dipendente.getDipendentibyId(widget.id);
 
     setState(() {
       _entrate = entrate;
@@ -47,9 +49,12 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     });
   }
 
-  void _editEntrataUscita(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
-    TextEditingController entrataController = TextEditingController(text: entrata['ora'] ?? '');
-    TextEditingController uscitaController = TextEditingController(text: uscita?['ora'] ?? '');
+  void _editEntrataUscita(
+      Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
+    TextEditingController entrataController =
+        TextEditingController(text: entrata['ora'] ?? '');
+    TextEditingController uscitaController =
+        TextEditingController(text: uscita?['ora'] ?? '');
 
     showDialog(
       context: context,
@@ -64,16 +69,20 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                 // Entrata Time Picker
                 ListTile(
                   title: Text('Ora Entrata'),
-                  subtitle: Text(entrataController.text.isEmpty ? 'Seleziona l\'ora' : entrataController.text),
+                  subtitle: Text(entrataController.text.isEmpty
+                      ? 'Seleziona l\'ora'
+                      : entrataController.text),
                   onTap: () async {
                     TimeOfDay? time = await showTimePicker(
                       context: context,
-                      initialTime: TimeOfDay.fromDateTime(DateTime.parse("${entrata['data']} ${entrata['ora']}")),
+                      initialTime: TimeOfDay.fromDateTime(DateTime.parse(
+                          "${entrata['data']} ${entrata['ora']}")),
                     );
                     if (time != null) {
                       // Update the controller text immediately
                       setState(() {
-                        entrataController.text = time.format(context); // Update controller text
+                        entrataController.text =
+                            time.format(context); // Update controller text
                       });
                     }
                   },
@@ -81,17 +90,24 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
                 // Uscita Time Picker (if needed)
                 ListTile(
-                  title: Text(uscita == null ? 'Aggiungi Ora Uscita' : 'Ora Uscita'),
-                  subtitle: Text(uscitaController.text.isEmpty ? 'Seleziona l\'ora' : uscitaController.text),
+                  title: Text(
+                      uscita == null ? 'Aggiungi Ora Uscita' : 'Ora Uscita'),
+                  subtitle: Text(uscitaController.text.isEmpty
+                      ? 'Seleziona l\'ora'
+                      : uscitaController.text),
                   onTap: () async {
                     TimeOfDay? time = await showTimePicker(
                       context: context,
-                      initialTime: uscita == null ? TimeOfDay.now() : TimeOfDay.fromDateTime(DateTime.parse("${uscita['data']} ${uscita['ora']}")),
+                      initialTime: uscita == null
+                          ? TimeOfDay.now()
+                          : TimeOfDay.fromDateTime(DateTime.parse(
+                              "${uscita['data']} ${uscita['ora']}")),
                     );
                     if (time != null) {
                       // Update the controller text immediately
                       setState(() {
-                        uscitaController.text = time.format(context); // Update controller text
+                        uscitaController.text =
+                            time.format(context); // Update controller text
                       });
                     }
                   },
@@ -142,23 +158,25 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     );
   }
 
-
-
-  void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
+  void _confirmDelete(
+      Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 30),  // Aggiungi spazio sui lati
+          insetPadding:
+              EdgeInsets.symmetric(horizontal: 30), // Aggiungi spazio sui lati
           child: Builder(
             builder: (context) {
               return Container(
-                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.6),
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, // Aggiungi questa proprietà
+                      mainAxisSize:
+                          MainAxisSize.min, // Aggiungi questa proprietà
                       children: [
                         Text(
                           'Sei sicuro di voler eliminare questa entrata e la relativa uscita (se presente)?',
@@ -177,10 +195,12 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                             TextButton(
                               onPressed: () async {
                                 if (entrata != null) {
-                                  await DatabaseHelper.deleteEntrataById(entrata['id']);
+                                  await DatabaseHelper.deleteEntrataById(
+                                      entrata['id']);
                                 }
                                 if (uscita != null) {
-                                  await DatabaseHelper.deleteUscitaById(uscita['id']);
+                                  await DatabaseHelper.deleteUscitaById(
+                                      uscita['id']);
                                 }
 
                                 _fetchEntrateUscite();
@@ -203,7 +223,6 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
         );
       },
     );
-
   }
 
   void _filterByDate(DateTime? date) {
@@ -216,22 +235,29 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> filteredEntrate = _selectedDate != null
         ? _entrate.where((entrata) {
-      DateTime entrataDate = DateTime.parse("${entrata['data']} ${entrata['ora']}");
-      return _selectedDate != null &&
-          DateFormat('yyyy-MM-dd').format(entrataDate) == DateFormat('yyyy-MM-dd').format(_selectedDate!);
-    }).toList()
+            DateTime entrataDate =
+                DateTime.parse("${entrata['data']} ${entrata['ora']}");
+            return _selectedDate != null &&
+                DateFormat('yyyy-MM-dd').format(entrataDate) ==
+                    DateFormat('yyyy-MM-dd').format(_selectedDate!);
+          }).toList()
         : _entrate;
 
     return Scaffold(
       appBar: AppBar(
         title: dipendente != null
-            ? Text('Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}',style: TextStyle(color: Colors.white))
+            ? Text(
+                'Entrate/Uscite di ${dipendente['cognome']} ${dipendente['nome']}',
+                style: TextStyle(color: Colors.white))
             : Text('Entrate/Uscite'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(Icons.calendar_today ,  color: Colors.white,),
+            icon: Icon(
+              Icons.calendar_today,
+              color: Colors.white,
+            ),
             onPressed: () async {
               DateTime? selectedDate = await showDatePicker(
                 context: context,
@@ -251,12 +277,15 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
               itemCount: filteredEntrate.length,
               itemBuilder: (context, index) {
                 var entrata = filteredEntrate[index];
-                var uscita = _uscite.isNotEmpty && index < _uscite.length ? _uscite[index] : null;
+                var uscita = _uscite.isNotEmpty && index < _uscite.length
+                    ? _uscite[index]
+                    : null;
 
                 String entrataDataOra = "${entrata['data']} ${entrata['ora']}";
                 DateTime? entrataDateTime = _parseDateTime(entrataDataOra);
 
-                String uscitaDataOra = uscita != null ? "${uscita['data']} ${uscita['ora']}" : '';
+                String uscitaDataOra =
+                    uscita != null ? "${uscita['data']} ${uscita['ora']}" : '';
                 DateTime? uscitaDateTime = _parseDateTime(uscitaDataOra);
 
                 return Card(
@@ -268,9 +297,11 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (entrataDateTime != null)
-                          Text("Entrata: ${DateFormat('HH:mm').format(entrataDateTime)}"),
+                          Text(
+                              "Entrata: ${DateFormat('HH:mm').format(entrataDateTime)}"),
                         if (uscitaDateTime != null)
-                          Text("Uscita: ${DateFormat('HH:mm').format(uscitaDateTime)}"),
+                          Text(
+                              "Uscita: ${DateFormat('HH:mm').format(uscitaDateTime)}"),
                       ],
                     ),
                     onTap: () => _editEntrataUscita(entrata, uscita),

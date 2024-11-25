@@ -10,13 +10,13 @@ class DatabaseHelper {
 
   DatabaseHelper._internal();
 
-   static Future<Database> get getDatabase async {
+  static Future<Database> get getDatabase async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
-   static Future<Database> _initDatabase() async {
+  static Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'app_database.db');
     print(path);
 
@@ -72,7 +72,6 @@ class DatabaseHelper {
   }
   //INSERT
 
-
   static Future<bool> registraEntrata(int dipendenteId) async {
     try {
       final entrataApertaId = await checkEntrataAperta(dipendenteId);
@@ -104,13 +103,11 @@ class DatabaseHelper {
     }
   }
 
-
-  static Future<Map<String, dynamic>?> getUltimaEntrata(int dipendenteId) async {
+  static Future<Map<String, dynamic>?> getUltimaEntrata(
+      int dipendenteId) async {
     final db = await getDatabase;
 
     // Ottieni la data di oggi (per limitare la ricerca a oggi)
-
-
 
     // Ottieni l'ultima entrata (ordinata per data e ora decrescente)
     final result = await db.query(
@@ -127,9 +124,11 @@ class DatabaseHelper {
 
     return null; // Se non trovi nessuna entrata, restituisci null
   }
-  static Future<Map<String, dynamic>?> getUltimaEntrataAperta(int dipendenteId) async {
+
+  static Future<Map<String, dynamic>?> getUltimaEntrataAperta(
+      int dipendenteId) async {
     final db = await getDatabase;
-     final result = await db.rawQuery('''
+    final result = await db.rawQuery('''
     SELECT entrate.id, entrate.dipendenteEntr, entrate.data
     FROM entrate 
     LEFT JOIN uscite  ON entrate.uscitaId = uscite.entrataId
@@ -140,7 +139,6 @@ class DatabaseHelper {
 
     return result.isNotEmpty ? result.first : null;
   }
-
 
   static Future<void> chiudiUltimaEntrata(int dipendenteId) async {
     final db = await getDatabase;
@@ -158,6 +156,7 @@ class DatabaseHelper {
       print("Entrata chiusa con successo.");
     }
   }
+
   // Funzione per aggiornare l'entrata usando l'ID
   static Future<void> updateEntrataById(int entrataId, String nuovaOra) async {
     final db = await getDatabase;
@@ -167,11 +166,14 @@ class DatabaseHelper {
       'entrate',
       {'ora': nuovaOra}, // Nuovo orario
       where: 'id = ?',
-      whereArgs: [entrataId], // Usa l'ID per identificare l'entrata univocamente
+      whereArgs: [
+        entrataId
+      ], // Usa l'ID per identificare l'entrata univocamente
     );
   }
 
-  static Future<List<Map<String, dynamic>>> getEntryExitLogs(int dipendenteId) async {
+  static Future<List<Map<String, dynamic>>> getEntryExitLogs(
+      int dipendenteId) async {
     final db = await getDatabase;
 
     // Recupera i log di entrata/uscita per un dipendente
@@ -186,20 +188,19 @@ class DatabaseHelper {
     return result;
   }
 
-  static Future<List<Map<String, dynamic>>> getLogEntrateUscite(String codiceFiscale) async {
+  static Future<List<Map<String, dynamic>>> getLogEntrateUscite(
+      String codiceFiscale) async {
     final db = await getDatabase;
-    List<Map<String, dynamic>> dipendente = await db.query(
-        'dipendenti',
+    List<Map<String, dynamic>> dipendente = await db.query('dipendenti',
         columns: ['id'],
         where: 'codiceFiscale = ?',
-        whereArgs: [codiceFiscale]
-    );
+        whereArgs: [codiceFiscale]);
 
     if (dipendente.isEmpty) {
       // Se non viene trovato il dipendente con il codice fiscale, restituisci un elenco vuoto
       return [];
     }
-    int idDipendente = dipendente.first['id'];  // Ottieni l'id del dipendente
+    int idDipendente = dipendente.first['id']; // Ottieni l'id del dipendente
     var now = DateTime.now();
     final data = DateFormat("yyyy-MM-dd").format(now);
     // Query con JOIN tra la tabella entrate, uscite e dipendenti
@@ -219,10 +220,11 @@ class DatabaseHelper {
       INNER JOIN dipendenti ON entrate.dipendenteEntr = Dipendenti.id
       WHERE entrate.dipendenteEntr = ? AND entrate.data = ?
       ORDER BY oraEntrata ASC
-    ''', [idDipendente , data]);
+    ''', [idDipendente, data]);
   }
 
-  static Future<void> updateEntrataByDataOra(String data, String oraOriginale, String nuovaOra) async {
+  static Future<void> updateEntrataByDataOra(
+      String data, String oraOriginale, String nuovaOra) async {
     final db = await getDatabase;
     await db.update(
       'entrate',
@@ -231,6 +233,7 @@ class DatabaseHelper {
       whereArgs: [data, oraOriginale],
     );
   }
+
   static Future<void> updateUscitaById(int uscitaId, String nuovaOra) async {
     final db = await getDatabase;
     await db.update(
@@ -240,27 +243,28 @@ class DatabaseHelper {
       whereArgs: [uscitaId],
     );
   }
-  static Future<void> addUscitaByData(String entrataData, String uscitaOra, int entrataId) async {
+
+  static Future<void> addUscitaByData(
+      String entrataData, String uscitaOra, int entrataId) async {
     final db = await getDatabase;
     await db.insert(
       'uscite',
       {
         'data': entrataData,
         'ora': uscitaOra,
-        'entrataId': entrataId,  // Aggiungi l'entrataId
+        'entrataId': entrataId, // Aggiungi l'entrataId
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
-
-
 
   static Future<bool> registraUscita(int dipendenteId) async {
     try {
       // Controlla se esiste un'entrata aperta
       final entrataApertaId = await checkEntrataAperta(dipendenteId);
       if (entrataApertaId == null) {
-        print("Errore nella registrazione dell'uscita: nessuna entrata aperta trovata.");
+        print(
+            "Errore nella registrazione dell'uscita: nessuna entrata aperta trovata.");
         return false;
       }
 
@@ -306,12 +310,6 @@ class DatabaseHelper {
     }
   }
 
-
-
-
-
-
-
   //UPDATE
   static Future<void> updateEntrataTime(int id, String ora) async {
     final db = await getDatabase;
@@ -323,7 +321,6 @@ class DatabaseHelper {
     );
   }
 
-
   static Future<void> updateUscitaTime(int id, String ora) async {
     final db = await getDatabase;
     await db.update(
@@ -333,6 +330,7 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
+
   static Future<int?> checkEntrataAperta(int dipendenteId) async {
     try {
       final db = await getDatabase;
@@ -359,12 +357,6 @@ class DatabaseHelper {
     }
   }
 
-
-
-
-
-
-
   static Future<bool> checkUscitaAperta(int dipendenteId) async {
     final db = await getDatabase;
 
@@ -382,11 +374,7 @@ class DatabaseHelper {
     return result.isNotEmpty; // Restituisce true se c'è un'uscita aperta
   }
 
-
-
-
   //GET
-
 
   static Future<List<Map<String, dynamic>>> getEntrate(int dipendenteId) async {
     final db = await getDatabase;
@@ -405,7 +393,9 @@ class DatabaseHelper {
       whereArgs: [dipendenteId],
     );
   }
-  static Future<List<Map<String, dynamic>>> getUsciteByEntrataId(int entrataId) async {
+
+  static Future<List<Map<String, dynamic>>> getUsciteByEntrataId(
+      int entrataId) async {
     final db = await getDatabase;
     return await db.query(
       'uscite',
@@ -413,8 +403,6 @@ class DatabaseHelper {
       whereArgs: [entrataId],
     );
   }
-
-
 
 // Funzione per eliminare un'entrata usando l'ID
   static Future<void> deleteEntrataById(int entrataId) async {
@@ -424,9 +412,12 @@ class DatabaseHelper {
     await db.delete(
       'entrate',
       where: 'id = ?',
-      whereArgs: [entrataId], // Usa l'ID per identificare l'entrata univocamente
+      whereArgs: [
+        entrataId
+      ], // Usa l'ID per identificare l'entrata univocamente
     );
   }
+
   // Funzione per eliminare un'uscita usando l'ID
   static Future<void> deleteUscitaById(int uscitaId) async {
     final db = await getDatabase;
@@ -438,9 +429,4 @@ class DatabaseHelper {
       whereArgs: [uscitaId], // Usa l'ID per identificare l'uscita univocamente
     );
   }
-
-
-
-
-
 }

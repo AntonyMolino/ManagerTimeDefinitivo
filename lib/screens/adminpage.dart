@@ -30,8 +30,6 @@ class _AdminPageState extends State<AdminPage> {
     _fetchDipendenti();
   }
 
-
-
   void _showAddDipendenteDialog() {
     String nome = '';
     String cognome = '';
@@ -137,13 +135,13 @@ class _AdminPageState extends State<AdminPage> {
                 context: context,
                 builder: (BuildContext context) {
                   TextEditingController nameController =
-                  TextEditingController(text: dipendente['nome']);
+                      TextEditingController(text: dipendente['nome']);
                   TextEditingController surnameController =
-                  TextEditingController(text: dipendente['cognome']);
+                      TextEditingController(text: dipendente['cognome']);
                   TextEditingController emailController =
-                  TextEditingController(text: dipendente['email']);
+                      TextEditingController(text: dipendente['email']);
                   TextEditingController codiceFiscaleController =
-                  TextEditingController(text: dipendente['codiceFiscale']);
+                      TextEditingController(text: dipendente['codiceFiscale']);
 
                   return SingleChildScrollView(
                     child: AlertDialog(
@@ -165,14 +163,16 @@ class _AdminPageState extends State<AdminPage> {
                           ),
                           TextField(
                             controller: codiceFiscaleController,
-                            decoration: InputDecoration(labelText: 'Codice Fiscale'),
+                            decoration:
+                                InputDecoration(labelText: 'Codice Fiscale'),
                           ),
                         ],
                       ),
                       actions: [
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).pop(); // Chiudi il dialogo senza salvare
+                            Navigator.of(context)
+                                .pop(); // Chiudi il dialogo senza salvare
                           },
                           child: Text("Annulla"),
                         ),
@@ -184,17 +184,18 @@ class _AdminPageState extends State<AdminPage> {
                               nameController.text, // Nome aggiornato
                               surnameController.text, // Cognome aggiornato
                               emailController.text, // Email aggiornata
-                              codiceFiscaleController.text, // Codice fiscale aggiornato
+                              codiceFiscaleController
+                                  .text, // Codice fiscale aggiornato
                             );
 
                             // Ricarica i dipendenti dal database
                             await _fetchDipendenti();
 
-                            Navigator.of(context).pop(); // Chiudi il dialogo dopo aver salvato
+                            Navigator.of(context)
+                                .pop(); // Chiudi il dialogo dopo aver salvato
                           },
                           child: Text("Salva"),
                         )
-
                       ],
                     ),
                   );

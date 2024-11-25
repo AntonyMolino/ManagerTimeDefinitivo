@@ -26,8 +26,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Accesso Admin',
-        style: TextStyle(color: Colors.white),),
+        title: Text(
+          'Accesso Admin',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
@@ -38,7 +40,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 100 , right: 100),
+                padding: const EdgeInsets.only(left: 100, right: 100),
                 child: Text(
                   'Inserisci la password per accedere alla pagina admin:',
                   style: TextStyle(fontSize: 16),
@@ -46,9 +48,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               ),
               SizedBox(height: 16),
               Padding(
-                padding: const EdgeInsets.only(left: 120 , right: 120),
+                padding: const EdgeInsets.only(left: 120, right: 120),
                 child: TextField(
-
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
@@ -60,8 +61,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _checkPassword,
-                child: Text('Accedi',
-                style: TextStyle(color: Colors.white),),
+                child: Text(
+                  'Accedi',
+                  style: TextStyle(color: Colors.white),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                 ),

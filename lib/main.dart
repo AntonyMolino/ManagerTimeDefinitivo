@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         brightness: Brightness.light,
         textTheme: TextTheme(
-          headlineSmall: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo),
+          headlineSmall: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo),
           bodyLarge: TextStyle(fontSize: 16, color: Colors.black54),
         ),
       ),
@@ -25,4 +26,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

@@ -47,7 +47,8 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
       _cameraController.stop();
     } else if (state == AppLifecycleState.resumed) {
       _cameraController.start();
@@ -71,7 +72,8 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     }
 
     if (!isValidQR) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Codice QR non valido')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Codice QR non valido')));
       return;
     }
 
@@ -79,11 +81,13 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
 
     // Navigate based on scanned QR code
     if (scannedData == "admin") {
-      await Navigator.push(context, MaterialPageRoute(builder: (context) => AdminLoginPage()));
+      await Navigator.push(
+          context, MaterialPageRoute(builder: (context) => AdminLoginPage()));
     } else {
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HomePage(codiceFiscale: scannedData)),
+        MaterialPageRoute(
+            builder: (context) => HomePage(codiceFiscale: scannedData)),
       );
     }
 
@@ -98,7 +102,8 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           padding: const EdgeInsets.all(8.0),
           child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
         ),
-        title: Text('Sistema di Registrazione', style: TextStyle(color: Colors.white)),
+        title: Text('Sistema di Registrazione',
+            style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
@@ -108,7 +113,8 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Scansiona il codice QR per accedere:', style: TextStyle(fontSize: 18)),
+            Text('Scansiona il codice QR per accedere:',
+                style: TextStyle(fontSize: 18)),
             SizedBox(height: 16),
             if (_isCameraPermissionGranted)
               Container(
