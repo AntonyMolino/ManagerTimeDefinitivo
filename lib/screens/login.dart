@@ -118,13 +118,17 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => AdminLoginPage()),
-        );
+        ).then((value) {
+          _cameraController.start();
+        },);
       } else {
         if (!context.mounted) return;
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => HomePage(codiceFiscale: scannedData)),
-        );
+        ).then((value) {
+          _cameraController.start();
+        },);
       }
 
       _cameraController.start(); // Restart camera after navigation
