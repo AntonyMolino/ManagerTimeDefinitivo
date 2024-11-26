@@ -32,7 +32,11 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+                    (route) => false, // Rimuove tutte le schermate precedenti
+              );
               print('Utente uscito');
             },
           ),
@@ -276,9 +280,10 @@ class EntryExitSection extends StatelessWidget {
 
                             if (result == true) {
                               if (!context.mounted) return;
-                              Navigator.push(
+                              Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(builder: (context) => LoginScreen()),
+                                    (route) => false, // Rimuove tutte le schermate precedenti
                               );
                             }
                           } else {
@@ -342,9 +347,10 @@ class EntryExitSection extends StatelessWidget {
                             );
                             if (result == true) {
                               if (!context.mounted) return;
-                              Navigator.push(
+                              Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(builder: (context) => LoginScreen()),
+                                    (route) => false, // Rimuove tutte le schermate precedenti
                               );
                             }
                           }
@@ -524,9 +530,10 @@ class EntryExitSection extends StatelessWidget {
                             );
                             if (result == true) {
                               if (!context.mounted) return;
-                              Navigator.push(
+                              Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(builder: (context) => LoginScreen()),
+                                    (route) => false, // Rimuove tutte le schermate precedenti
                               );
                             }
                           } else {

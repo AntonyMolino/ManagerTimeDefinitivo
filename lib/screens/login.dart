@@ -13,20 +13,22 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   final MobileScannerController _cameraController = MobileScannerController();
   bool _isCameraPermissionGranted = false;
+  bool isDialogOpen = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _initializeApp();
+    WidgetsBinding.instance.addObserver(this); // Observe lifecycle changes
+    print("inizializzo login");
   }
 
-  // Initialization methods
+  // Initialize app by requesting camera permissions
   Future<void> _initializeApp() async {
     await _requestCameraPermission();
   }
 
-  // Request camera permission for scanning QR codes
+  // Request camera permission
   Future<void> _requestCameraPermission() async {
     final status = await Permission.camera.request();
     setState(() {
@@ -45,24 +47,25 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  // Lifecycle method for when the app state changes (in background/foreground)
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
-      _cameraController.stop();
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      _cameraController.stop(); // Stop camera when app is backgrounded
     } else if (state == AppLifecycleState.resumed) {
-      _cameraController.start();
+      _cameraController.start(); // Restart camera when app is resumed
     }
   }
 
-  // Handle the scanned QR code
+  // Handle QR scan
   Future<void> _onScan(BarcodeCapture barcodeCapture) async {
     String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
     scannedData = scannedData.trim();
-    // Fetch the list of dipendenti (employees) from the database
+
+    // Fetch employees from database
     final dipendenti = await Dipendente.getDipendenti();
 
-    // Search for a matching codiceFiscale
+    // Validate the scanned QR code
     bool isValidQR = false;
     for (var record in dipendenti) {
       if (record['codiceFiscale'] == scannedData) {
@@ -72,29 +75,66 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     }
 
     if (!isValidQR) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Codice QR non valido')));
-      return;
-    }
+      if (!isDialogOpen) {
+        isDialogOpen = true;
+        _cameraController.stop(); // Stop camera
 
-    _cameraController.stop(); // Stop camera before navigation
-
-    // Navigate based on scanned QR code
-
-    if (scannedData == "admin") {
-      if(!context.mounted) return;
-      await Navigator.push(
-          context, MaterialPageRoute(builder: (context) => AdminLoginPage()));
+        // Show error dialog
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Errore", style: TextStyle(color: Colors.white)),
+              content: Text(
+                "Codice QR non valido",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              backgroundColor: Colors.red,
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    isDialogOpen = false;
+                    await Future.delayed(Duration(milliseconds: 100));
+                    print("Premo OK");
+                    _cameraController.start(); // Restart camera after dialog
+                  },
+                  child: Text(
+                    "Ok",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      }
     } else {
-      if(!context.mounted) return;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => HomePage(codiceFiscale: scannedData)),
-      );
-    }
+      _cameraController.stop(); // Stop camera before navigation
 
-    _cameraController.start(); // Restart camera after navigation
+      // Navigate based on QR code scan
+      if (scannedData == "admin") {
+        if (!context.mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminLoginPage()),
+        );
+      } else {
+        if (!context.mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage(codiceFiscale: scannedData)),
+        );
+      }
+
+      _cameraController.start(); // Restart camera after navigation
+    }
+  }
+
+  // This method will be triggered when the current screen is popped off the navigation stack
+  void didPopNext() {
+    // This will restart the camera when returning to this screen
+    _cameraController.start();
   }
 
   @override
@@ -105,8 +145,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           padding: const EdgeInsets.all(8.0),
           child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
         ),
-        title: Text('Sistema di Registrazione',
-            style: TextStyle(color: Colors.white)),
+        title: Text('Sistema di Registrazione', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
@@ -116,8 +155,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Scansiona il codice QR per accedere:',
-                style: TextStyle(fontSize: 18)),
+            Text('Scansiona il codice QR per accedere:', style: TextStyle(fontSize: 18)),
             SizedBox(height: 16),
             if (_isCameraPermissionGranted)
               Container(
