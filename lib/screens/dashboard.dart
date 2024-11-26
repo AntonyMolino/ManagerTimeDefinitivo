@@ -218,44 +218,36 @@ class EntryExitSection extends StatelessWidget {
                                   dipendente['id']);
                           if (entrataRegistrata) {
                             // Successo nella registrazione dell'entrata
-                            showDialog(
+                            final result = await showDialog<bool>(
                               barrierDismissible: false,
                               context: context,
                               builder: (BuildContext context) {
                                 double progress = 0.0;
 
-                                // StatefulBuilder per aggiornare dinamicamente la UI del dialogo
+                                // Variabile per gestire il timer
+                                Timer? timer;
+
                                 return StatefulBuilder(
-                                  builder: (BuildContext context,
-                                      StateSetter setState) {
-                                    // Timer per aggiornare il progresso
-                                    Timer.periodic(Duration(milliseconds: 200),
-                                        (Timer timer) {
-                                      if (progress >= 1.0) {
-                                        timer
-                                            .cancel(); // Ferma il timer una volta completato
-                                        Navigator.of(context)
-                                            .pop(); // Chiudi il dialogo
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (
-                                              context,
-                                            ) =>
-                                                LoginScreen(), // Naviga alla nuova schermata
-                                          ),
-                                        );
-                                      } else {
-                                        setState(() {
-                                          progress +=
-                                              0.01; // Incrementa il progresso
-                                        });
-                                      }
-                                    });
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    // Avvio del timer solo se non è già stato avviato
+                                    if (timer == null) {
+                                      timer = Timer.periodic(Duration(milliseconds: 200), (Timer t) {
+                                        if (progress >= 1.0) {
+                                          t.cancel();
+                                          // Chiude il dialogo e restituisce `true`
+                                          if (context.mounted) {
+                                            Navigator.of(context, rootNavigator: true).pop(true);
+                                          }
+                                        } else {
+                                          setState(() {
+                                            progress += 0.10;
+                                          });
+                                        }
+                                      });
+                                    }
 
                                     return AlertDialog(
-                                      backgroundColor: Colors
-                                          .green, // Colore di sfondo (verde per il successo)
+                                      backgroundColor: Colors.green,
                                       title: Text(
                                         'Successo!',
                                         style: TextStyle(color: Colors.white),
@@ -265,18 +257,13 @@ class EntryExitSection extends StatelessWidget {
                                         children: [
                                           Text(
                                             'Entrata registrata con successo!',
-                                            style:
-                                                TextStyle(color: Colors.white),
+                                            style: TextStyle(color: Colors.white),
                                           ),
                                           SizedBox(height: 20),
                                           LinearProgressIndicator(
-                                            value:
-                                                progress, // Aggiorna dinamicamente il valore
-                                            backgroundColor:
-                                                Colors.white.withOpacity(0.3),
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
+                                            value: progress,
+                                            backgroundColor: Colors.white.withOpacity(0.3),
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                           ),
                                         ],
                                       ),
@@ -285,39 +272,41 @@ class EntryExitSection extends StatelessWidget {
                                 );
                               },
                             );
+
+
+                            if (result == true) {
+                              if (!context.mounted) return;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => LoginScreen()),
+                              );
+                            }
                           } else {
-                            showDialog(
+                            final result = await showDialog<bool>(
                               barrierDismissible: false,
                               context: context,
                               builder: (BuildContext context) {
                                 double progress = 0.0;
-
+                                Timer? timer;
                                 // StatefulBuilder per aggiornare dinamicamente la UI del dialogo
                                 return StatefulBuilder(
-                                  builder: (BuildContext context,
-                                      StateSetter setState) {
-                                    // Timer per aggiornare il progresso
-                                    Timer.periodic(Duration(milliseconds: 300),
-                                        (Timer timer) {
-                                      if (progress >= 1.0) {
-                                        timer
-                                            .cancel(); // Ferma il timer una volta completato
-                                        Navigator.of(context)
-                                            .pop(); // Chiudi il dialogo
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                LoginScreen(), // Naviga alla nuova schermata
-                                          ),
-                                        );
-                                      } else {
-                                        setState(() {
-                                          progress +=
-                                              0.01; // Incrementa il progresso
-                                        });
-                                      }
-                                    });
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    // Avvio del timer solo se non è già stato avviato
+                                    if (timer == null) {
+                                      timer = Timer.periodic(Duration(milliseconds: 200), (Timer t) {
+                                        if (progress >= 1.0) {
+                                          t.cancel();
+                                          // Chiude il dialogo e restituisce `true`
+                                          if (context.mounted) {
+                                            Navigator.of(context, rootNavigator: true).pop(true);
+                                          }
+                                        } else {
+                                          setState(() {
+                                            progress += 0.10;
+                                          });
+                                        }
+                                      });
+                                    }
 
                                     return AlertDialog(
                                       backgroundColor: Colors
@@ -351,6 +340,13 @@ class EntryExitSection extends StatelessWidget {
                                 );
                               },
                             );
+                            if (result == true) {
+                              if (!context.mounted) return;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => LoginScreen()),
+                              );
+                            }
                           }
                         } else {
                           bool uscitaRegistrata =
@@ -358,36 +354,32 @@ class EntryExitSection extends StatelessWidget {
                                   dipendente['id']);
                           if (uscitaRegistrata) {
                             // Successo nella registrazione dell'uscita, ora mostra il grafico
-                            showDialog(
+                            if (!context.mounted) return;
+                            final result = await showDialog<bool>(
                               barrierDismissible: false,
                               context: context,
                               builder: (BuildContext context) {
                                 double progress = 0.0;
+                                Timer? timer;
 
                                 return StatefulBuilder(
-                                  builder: (BuildContext context,
-                                      StateSetter setState) {
-                                    // Timer per gestire il progresso della barra
-                                    Timer.periodic(Duration(milliseconds: 300),
-                                        (Timer timer) {
-                                      if (progress >= 1.0) {
-                                        timer
-                                            .cancel(); // Ferma il timer una volta completato
-                                        Navigator.of(context)
-                                            .pop(); // Chiude il dialogo
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  LoginScreen()), // Naviga alla nuova pagina
-                                        );
-                                      } else {
-                                        setState(() {
-                                          progress +=
-                                              0.01; // Incrementa il progresso
-                                        });
-                                      }
-                                    });
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    // Avvio del timer solo se non è già stato avviato
+                                    if (timer == null) {
+                                      timer = Timer.periodic(Duration(milliseconds: 200), (Timer t) {
+                                        if (progress >= 1.0) {
+                                          t.cancel();
+                                          // Chiude il dialogo e restituisce `true`
+                                          if (context.mounted) {
+                                            Navigator.of(context, rootNavigator: true).pop(true);
+                                          }
+                                        } else {
+                                          setState(() {
+                                            progress += 0.10;
+                                          });
+                                        }
+                                      });
+                                    }
 
                                     return AlertDialog(
                                       backgroundColor: Colors
@@ -530,6 +522,13 @@ class EntryExitSection extends StatelessWidget {
                                 );
                               },
                             );
+                            if (result == true) {
+                              if (!context.mounted) return;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => LoginScreen()),
+                              );
+                            }
                           } else {
                             showDialog(
                               barrierDismissible: false,

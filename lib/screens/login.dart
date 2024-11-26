@@ -80,10 +80,13 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     _cameraController.stop(); // Stop camera before navigation
 
     // Navigate based on scanned QR code
+
     if (scannedData == "admin") {
+      if(!context.mounted) return;
       await Navigator.push(
           context, MaterialPageRoute(builder: (context) => AdminLoginPage()));
     } else {
+      if(!context.mounted) return;
       await Navigator.push(
         context,
         MaterialPageRoute(
