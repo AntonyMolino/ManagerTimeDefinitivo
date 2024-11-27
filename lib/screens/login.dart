@@ -90,15 +90,16 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Errore"),
-        content: Text(message),
+        title: Text("Errore" , style: TextStyle(color: Colors.white),),
+        content: Text("Errore nella lettura del qr code , Premere 'Riprova' per continuare e scannerizzare un nuovo qr" , style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.red,
+
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Chiudi il dialogo
             },
-            child: Text("Ok", style: TextStyle(color: Colors.white)),
+            child: Text("Riprova", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
