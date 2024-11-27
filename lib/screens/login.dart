@@ -6,29 +6,30 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class LoginScreen extends StatefulWidget {
+
+
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
-  final MobileScannerController _cameraController = MobileScannerController();
+  static MobileScannerController cameraController = MobileScannerController();
   bool _isCameraPermissionGranted = false;
-  bool isDialogOpen = false;
+  bool isDialogOpen = false; // Variabile per controllare i dialoghi
 
   @override
   void initState() {
     super.initState();
     _initializeApp();
-    WidgetsBinding.instance.addObserver(this); // Observe lifecycle changes
-    print("inizializzo login");
+    WidgetsBinding.instance.addObserver(this); // Osserva il ciclo di vita
+    cameraController.start(); // Avvia la fotocamera
   }
 
-  // Initialize app by requesting camera permissions
   Future<void> _initializeApp() async {
     await _requestCameraPermission();
   }
 
-  // Request camera permission
   Future<void> _requestCameraPermission() async {
     final status = await Permission.camera.request();
     setState(() {
@@ -40,105 +41,68 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     }
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _cameraController.dispose();
-    super.dispose();
-  }
 
-  // Lifecycle method for when the app state changes (in background/foreground)
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
-      _cameraController.stop(); // Stop camera when app is backgrounded
+      cameraController.stop(); // Ferma la fotocamera quando l'app è in background
     } else if (state == AppLifecycleState.resumed) {
-      _cameraController.start(); // Restart camera when app is resumed
+      cameraController.start(); // Riavvia la fotocamera quando l'app torna in foreground
     }
   }
 
-  // Handle QR scan
   Future<void> _onScan(BarcodeCapture barcodeCapture) async {
     String scannedData = barcodeCapture.barcodes.first.rawValue ?? "Unknown";
     scannedData = scannedData.trim();
 
-    // Fetch employees from database
     final dipendenti = await Dipendente.getDipendenti();
-
-    // Validate the scanned QR code
-    bool isValidQR = false;
-    for (var record in dipendenti) {
-      if (record['codiceFiscale'] == scannedData) {
-        isValidQR = true;
-        break;
-      }
-    }
+    bool isValidQR = dipendenti.any((record) => record['codiceFiscale'] == scannedData);
 
     if (!isValidQR) {
       if (!isDialogOpen) {
-        isDialogOpen = true;
-        _cameraController.stop(); // Stop camera
-
-        // Show error dialog
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Text("Errore", style: TextStyle(color: Colors.white)),
-              content: Text(
-                "Codice QR non valido",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              backgroundColor: Colors.red,
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    isDialogOpen = false;
-                    await Future.delayed(Duration(milliseconds: 100));
-                    print("Premo OK");
-                    _cameraController.start(); // Restart camera after dialog
-                  },
-                  child: Text(
-                    "Ok",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
+        isDialogOpen = true; // Imposta `isDialogOpen` a `true` prima di mostrare il dialogo
+        cameraController.stop(); // Ferma la fotocamera
+        _showErrorDialog("Codice QR non valido").then((_) {
+          isDialogOpen = false; // Reimposta `isDialogOpen` a `false` dopo aver chiuso il dialogo
+          cameraController.start(); // Riavvia la fotocamera
+        });
       }
     } else {
-      _cameraController.stop(); // Stop camera before navigation
-
-      // Navigate based on QR code scan
+      cameraController.stop(); // Ferma la fotocamera prima di navigare
       if (scannedData == "admin") {
-        if (!context.mounted) return;
-        await Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => AdminLoginPage()),
-        ).then((value) {
-          _cameraController.start();
-        },);
+              (route) => false,
+        ).then((_) => cameraController.start()); // Riavvia la fotocamera al ritorno
       } else {
-        if (!context.mounted) return;
-        await Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => HomePage(codiceFiscale: scannedData)),
-        ).then((value) {
-          _cameraController.start();
-        },);
+              (route) => false,
+        ).then((_) => cameraController.start());
       }
-
-      _cameraController.start(); // Restart camera after navigation
     }
   }
 
-  // This method will be triggered when the current screen is popped off the navigation stack
-  void didPopNext() {
-    // This will restart the camera when returning to this screen
-    _cameraController.start();
+  Future<void> _showErrorDialog(String message) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Errore"),
+        content: Text(message),
+        backgroundColor: Colors.red,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Chiudi il dialogo
+            },
+            child: Text("Ok", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -165,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
               Container(
                 height: 300,
                 child: MobileScanner(
-                  controller: _cameraController,
+                  controller: cameraController,
                   onDetect: _onScan,
                 ),
               )

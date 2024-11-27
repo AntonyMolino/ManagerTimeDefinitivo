@@ -240,6 +240,7 @@ class EntryExitSection extends StatelessWidget {
                                           t.cancel();
                                           // Chiude il dialogo e restituisce `true`
                                           if (context.mounted) {
+                                            LoginScreen().createState();
                                             Navigator.of(context, rootNavigator: true).pop(true);
                                           }
                                         } else {

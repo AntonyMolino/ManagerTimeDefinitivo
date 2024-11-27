@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:managertime/screens/login.dart';
 import 'adminpage.dart';
 
 class AdminLoginPage extends StatefulWidget {
@@ -32,6 +33,16 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         ),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () async {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+                  (route) => false, // Rimuove tutte le schermate precedenti
+            );
+          },
+        ),
       ),
       body: Center(
         child: Padding(
