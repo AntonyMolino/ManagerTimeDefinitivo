@@ -1,7 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 
+import 'firebase_options.dart';
 import 'screens/login.dart';
 
 void main() async {
@@ -9,7 +11,9 @@ void main() async {
 
   // Now you can safely call SystemChrome.setPreferredOrientations
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
   DatabaseHelper.getDatabase;
 }
