@@ -31,10 +31,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     WidgetsFlutterBinding.ensureInitialized();
 
     // Now you can safely call SystemChrome.setPreferredOrientations
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await _requestCameraPermission();
   }
 
@@ -135,14 +132,11 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
             Text('Scansiona il codice QR per accedere:', style: TextStyle(fontSize: 18)),
             SizedBox(height: 16),
             if (_isCameraPermissionGranted)
-              Transform.rotate(
-                angle: -90 * 3.14159 / 180, // Ruota la fotocamera di 90 gradi
-                child: Container(
-                  height: 300,
-                  child: MobileScanner(
-                    controller: cameraController,
-                    onDetect: _onScan,
-                  ),
+              Container(
+                height: 300,
+                child: MobileScanner(
+                  controller: cameraController,
+                  onDetect: _onScan,
                 ),
               )
             else

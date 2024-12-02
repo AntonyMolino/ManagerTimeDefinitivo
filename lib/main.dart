@@ -8,10 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Now you can safely call SystemChrome.setPreferredOrientations
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeRight,
-    DeviceOrientation.landscapeLeft,
-  ]);
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(MyApp());
   DatabaseHelper.getDatabase;
