@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 
 class Dipendente {
@@ -79,15 +78,7 @@ class Dipendente {
     return await db.query('Dipendenti');
 
   }
-  static Future<List<Map<String, dynamic>>> getDipendentibyCodiceFiscale(String codiceFiscale) async {
-    final db = await DatabaseHelper.getDatabase;
-    return await db.query(
-      'Dipendenti',
-      where: 'codiceFiscale = ?',
-      whereArgs: [codiceFiscale],
-    );
-  }
-
+  
   static Future<List<Map<String, dynamic>>> getDipendentibyId(int id) async {
     final db = await DatabaseHelper.getDatabase;
     return await db.query(
