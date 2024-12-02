@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:managertime/db/DatabaseHelper.dart';
 
 import 'screens/login.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Now you can safely call SystemChrome.setPreferredOrientations
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeRight,
+    DeviceOrientation.landscapeLeft,
+  ]);
+
   runApp(MyApp());
   DatabaseHelper.getDatabase;
 }

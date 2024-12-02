@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:managertime/db/Dipendente.dart';
 import 'package:managertime/screens/admin_login_page.dart';
 import 'package:managertime/screens/dashboard.dart';
@@ -27,6 +28,13 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _initializeApp() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // Now you can safely call SystemChrome.setPreferredOrientations
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
     await _requestCameraPermission();
   }
 
@@ -127,11 +135,14 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
             Text('Scansiona il codice QR per accedere:', style: TextStyle(fontSize: 18)),
             SizedBox(height: 16),
             if (_isCameraPermissionGranted)
-              Container(
-                height: 300,
-                child: MobileScanner(
-                  controller: cameraController,
-                  onDetect: _onScan,
+              Transform.rotate(
+                angle: -90 * 3.14159 / 180, // Ruota la fotocamera di 90 gradi
+                child: Container(
+                  height: 300,
+                  child: MobileScanner(
+                    controller: cameraController,
+                    onDetect: _onScan,
+                  ),
                 ),
               )
             else
