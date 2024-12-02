@@ -117,6 +117,30 @@ class FirebaseDatabaseHelper {
     }
   }
 
+  static Future<Map<String, dynamic>?> getUltimaEntrataAperta(String dipendenteId) async {
+    try {
+      // Otteniamo tutte le entrate del dipendente ordinate per data decrescente
+      final querySnapshot = await _firestore
+          .collection('entrate')
+          .where('dipendenteEntr', isEqualTo: dipendenteId)
+          .where('chiuso', isEqualTo: 0) // Entrata non chiusa
+          .orderBy('data', descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Restituiamo l'ultima entrata aperta come una mappa
+        return querySnapshot.docs.first.data();
+      } else {
+        print("Nessuna entrata aperta trovata per il dipendente con ID $dipendenteId.");
+        return null;
+      }
+    } catch (e) {
+      print("Errore nel recuperare l'ultima entrata aperta: $e");
+      return null;
+    }
+  }
+
   // Recupera i log di entrate/uscite per un dipendente
   static Future<List<Map<String, dynamic>>> getLogEntrateUscite(
       String dipendenteId) async {
@@ -185,6 +209,17 @@ class FirebaseDatabaseHelper {
   static Future<bool> updateEntrataTime(String entrataId, String nuovaOra) async {
     return await updateEntrataById(entrataId, {'ora': nuovaOra});
   }
+  static Future<void> updateUscitaById(String uscitaId, String nuovaOra) async {
+    try {
+      await _firestore.collection('uscite').doc(uscitaId).update({
+        'ora': nuovaOra,
+      });
+      print("Ora dell'uscita aggiornata con successo!");
+    } catch (e) {
+      print("Errore nell'aggiornare l'ora dell'uscita: $e");
+    }
+  }
+
   static Future<bool> updateUscitaTime(String uscitaId, String nuovaOra) async {
     try {
       await _usciteCollection.doc(uscitaId).update({'ora': nuovaOra});
@@ -310,5 +345,5 @@ class FirebaseDatabaseHelper {
       return [];
     }
   }
-  
+
 }
