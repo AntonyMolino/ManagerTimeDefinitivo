@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "946178078121",
+    "project_id": "managertimemobile",
+    "storage_bucket": "managertimemobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946178078121:android:ecba0df98acc1c8cccc0b8",
+        "android_client_info": {
+          "package_name": "com.example.managertime"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBI22BBMI9qZegwFC_zOERHZM40Jzpx-nM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946178078121:android:9ba8db2b748f2e49ccc0b8",
+        "android_client_info": {
+          "package_name": "com.example.managertimemob"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBI22BBMI9qZegwFC_zOERHZM40Jzpx-nM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
