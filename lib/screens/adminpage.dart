@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:managertime/db/FirebaseDipendente.dart';
 import 'package:managertime/screens/entrateUscitePage.dart';
-import '';
+
 
 class AdminPage extends StatefulWidget {
   @override

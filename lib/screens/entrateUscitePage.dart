@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:managertime/db/Dipendente.dart';
 import '../db/DatabaseHelper.dart';
+import 'package:managertime/db/FirebaseDipendente.dart';
 
 class EntrateUscitePage extends StatefulWidget {
   final int id;
@@ -40,7 +40,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     }
 
     List<Map<String, dynamic>> dipendenti =
-    await Dipendente.getDipendentibyId(widget.id);
+    await Dipendente.getDipendenteById(widget.id);
 
     setState(() {
       _entrate = entrate;

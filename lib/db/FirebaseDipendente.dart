@@ -52,7 +52,7 @@ class Dipendente {
       ) async {
     try {
       final int id = await FirestoreAutoIncrement.getNextId('dipendenteId');
-      await _dipendentiCollection.add({
+      await _dipendentiCollection.doc(id.toString()).set({
         'id' : id,
         'nome': nome,
         'cognome': cognome,
@@ -117,9 +117,9 @@ class Dipendente {
   }
 
   // Recupera un dipendente per ID
-  static Future<List<Map<String, dynamic>>> getDipendenteById(String id) async {
+  static Future<List<Map<String, dynamic>>> getDipendenteById(int id) async {
     try {
-      final doc = await _dipendentiCollection.doc(id).get();
+      final doc = await _dipendentiCollection.doc(id.toString()).get();
       if (doc.exists) {
         return [
           {'id': doc.id, ...doc.data() as Map<String, dynamic>}

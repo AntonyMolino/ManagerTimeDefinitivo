@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:managertime/db/Dipendente.dart';
 import 'package:managertime/screens/admin_login_page.dart';
 import 'package:managertime/screens/dashboard.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:managertime/db/FirebaseDipendente.dart';
 class LoginScreen extends StatefulWidget {
 
 
