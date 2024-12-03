@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:managertime/db/DatabaseHelper.dart';
+
 import 'package:managertime/db/Dipendente.dart';
+import 'package:managertime/db/FirebaseDatabaseHelper.dart';
 import 'package:managertime/screens/login.dart';
 
 class HomePage extends StatelessWidget {
@@ -146,7 +147,8 @@ class EntryExitSection extends StatelessWidget {
 
   Future<int> calcolaOreLavorate() async {
     List<Map<String, dynamic>> logs =
-        await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
+        await FirebaseDatabaseHelper.getLogEntrateUscite(codiceFiscale);
+        await FirebaseDatabaseHelper.getLogEntrateUscite(codiceFiscale);
     int oreLavorate = 0;
 
     for (var log in logs) {
@@ -213,12 +215,13 @@ class EntryExitSection extends StatelessWidget {
                       // Codice modificato per mostrare il grafico nel showDialog per l'uscita con successo
 
                       onPressed: () async {
+                        print("Id utente $dipendente['id']");
                         Map<String, dynamic>? ultimaEntrata =
-                            await DatabaseHelper.getUltimaEntrataAperta(
+                            await FirebaseDatabaseHelper.getUltimaEntrataAperta(
                                 dipendente['id']);
                         if (ultimaEntrata == null) {
                           bool entrataRegistrata =
-                              await DatabaseHelper.registraEntrata(
+                              await FirebaseDatabaseHelper.registraEntrata(
                                   dipendente['id']);
                           if (entrataRegistrata) {
                             // Successo nella registrazione dell'entrata
@@ -357,7 +360,7 @@ class EntryExitSection extends StatelessWidget {
                           }
                         } else {
                           bool uscitaRegistrata =
-                              await DatabaseHelper.registraUscita(
+                              await FirebaseDatabaseHelper.registraUscita(
                                   dipendente['id']);
                           if (uscitaRegistrata) {
                             // Successo nella registrazione dell'uscita, ora mostra il grafico
@@ -633,7 +636,7 @@ class HoursWorkedSection extends StatelessWidget {
 
   Future<String> calcolaOreLavorate() async {
     List<Map<String, dynamic>> logs =
-        await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
+        await FirebaseDatabaseHelper.getLogEntrateUscite(codiceFiscale);
     String stringhe = "";
     int oreTotali = 0;
     int minutiTotali = 0;
@@ -775,7 +778,7 @@ class EntryExitLogsSection extends StatelessWidget {
   EntryExitLogsSection({required this.codiceFiscale});
 
   Future<List<Map<String, dynamic>>> getLogs() async {
-    return await DatabaseHelper.getLogEntrateUscite(codiceFiscale);
+    return await FirebaseDatabaseHelper.getLogEntrateUscite(codiceFiscale);
   }
 
   @override

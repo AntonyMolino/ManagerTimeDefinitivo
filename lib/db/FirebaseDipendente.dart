@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'FirestoreAutoIncrement.dart';
+
 class Dipendente {
   final String? id;
   final String nome;
@@ -29,6 +31,7 @@ class Dipendente {
   // Convertire da oggetto Dipendente a Map per Firestore
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'nome': nome,
       'cognome': cognome,
       'email': email,
@@ -48,7 +51,9 @@ class Dipendente {
       String codiceFiscale,
       ) async {
     try {
+      final int id = await FirestoreAutoIncrement.getNextId('dipendenteId');
       await _dipendentiCollection.add({
+        'id' : id,
         'nome': nome,
         'cognome': cognome,
         'email': email,
@@ -82,11 +87,11 @@ class Dipendente {
   }
 
   // Recupera tutti i dipendenti
-  static Future<List<Dipendente>> getDipendenti() async {
+  static Future<List<Map<String, dynamic>>> getDipendenti() async {
     try {
       final querySnapshot = await _dipendentiCollection.get();
       return querySnapshot.docs
-          .map((doc) => Dipendente.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
+          .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
           .toList();
     } catch (e) {
       print("Errore nel recupero dei dipendenti: $e");
@@ -95,37 +100,36 @@ class Dipendente {
   }
 
   // Recupera un dipendente per codice fiscale
-  static Future<Dipendente?> getDipendenteByCodiceFiscale(String codiceFiscale) async {
+  static Future<List<Map<String, dynamic>>> getDipendenteByCodiceFiscale(
+      String codiceFiscale) async {
     try {
       final querySnapshot = await _dipendentiCollection
           .where('codiceFiscale', isEqualTo: codiceFiscale)
-          .limit(1)
           .get();
 
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        return Dipendente.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
-      }
-      print("Nessun dipendente trovato con il codice fiscale specificato.");
-      return null;
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+          .toList();
     } catch (e) {
       print("Errore nel recupero del dipendente: $e");
-      return null;
+      return [];
     }
   }
 
   // Recupera un dipendente per ID
-  static Future<Dipendente?> getDipendenteById(String id) async {
+  static Future<List<Map<String, dynamic>>> getDipendenteById(String id) async {
     try {
       final doc = await _dipendentiCollection.doc(id).get();
       if (doc.exists) {
-        return Dipendente.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
+        return [
+          {'id': doc.id, ...doc.data() as Map<String, dynamic>}
+        ];
       }
       print("Nessun dipendente trovato con l'ID specificato.");
-      return null;
+      return [];
     } catch (e) {
       print("Errore nel recupero del dipendente: $e");
-      return null;
+      return [];
     }
   }
 

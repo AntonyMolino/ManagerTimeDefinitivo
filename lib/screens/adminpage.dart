@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:managertime/db/Dipendente.dart';
+import 'package:managertime/db/FirebaseDipendente.dart';
 import 'package:managertime/screens/entrateUscitePage.dart';
 import '';
 
