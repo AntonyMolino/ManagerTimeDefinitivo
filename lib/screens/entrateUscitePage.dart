@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../db/DatabaseHelper.dart';
+import '../db/FirebaseDatabaseHelper.dart';
 import 'package:managertime/db/FirebaseDipendente.dart';
 
 class EntrateUscitePage extends StatefulWidget {
@@ -28,10 +28,10 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
   Future<void> _fetchEntrateUscite() async {
     List<Map<String, dynamic>> entrate =
-    await DatabaseHelper.getEntrate(widget.id);
+    await FirebaseDatabaseHelper.getEntrate(widget.id);
     List<Map<String, dynamic>> uscite = [];
     for (var entrata in entrate) {
-      var uscita = await DatabaseHelper.getUsciteByEntrataId(entrata['id']);
+      var uscita = await FirebaseDatabaseHelper.getUsciteByEntrataId(entrata['id']);
       if (uscita.isNotEmpty) {
         uscite.add(uscita[0]);
       } else {
@@ -106,18 +106,18 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             ),
             TextButton(
               onPressed: () async {
-                await DatabaseHelper.updateEntrataById(
+                await FirebaseDatabaseHelper.updateEntrataById(
                   entrata['id'],
                   entrataController.text,
                 );
                 if (uscita == null) {
-                  await DatabaseHelper.addUscitaByData(
+                  await FirebaseDatabaseHelper.addUscitaByData(
                     entrata['data'],
                     uscitaController.text,
                     entrata['id'],
                   );
                 } else {
-                  await DatabaseHelper.updateUscitaById(
+                  await FirebaseDatabaseHelper.updateUscitaById(
                     uscita['id'],
                     uscitaController.text,
                   );
@@ -148,9 +148,9 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             ),
             TextButton(
               onPressed: () async {
-                await DatabaseHelper.deleteEntrataById(entrata['id']);
+                await FirebaseDatabaseHelper.deleteEntrataById(entrata['id']);
                 if (uscita != null) {
-                  await DatabaseHelper.deleteUscitaById(uscita['id']);
+                  await FirebaseDatabaseHelper.deleteUscitaById(uscita['id']);
                 }
                 await _fetchEntrateUscite();
                 Navigator.of(context).pop();

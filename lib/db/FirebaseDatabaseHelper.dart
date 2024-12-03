@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'FirestoreAutoIncrement.dart';
@@ -51,35 +52,35 @@ class FirebaseDatabaseHelper {
   // Controlla se esiste un'entrata aperta
   static Future<int?> checkEntrataAperta(int dipendenteId) async {
     try {
-      // Formatta la data corrente in formato "yyyy-MM-dd"
-      final String data = DateFormat("yyyy-MM-dd").format(DateTime.now()).toString();
-      print(data);
-      print("l id in check è $dipendenteId");
-      // Ottieni la collezione 'entrate' e filtra per dipendenteId, data e chiuso = 0
+      // Ottieni la data corrente nel formato richiesto
+      var  dataCorrente = DateFormat("yyyy-MM-dd").format(DateTime.now()).toString().trim();
+      print("check entrata aperta : $dipendenteId");
+      print("check entrata aperta : $dataCorrente");
+      // Esegui la query su Firestore
       final querySnapshot = await _firestore
-          .collection('entrate')
-          .where('dipendenteEntr', isEqualTo: dipendenteId) // Filtra per ID dipendente
-          .where('data', isEqualTo: data) // Filtra per data odierna
-          .where('chiuso', isEqualTo: 0) // Filtra per le entrate non chiuse
-          .orderBy('data', descending: true) // Ordina per data in ordine decrescente
-          .limit(1) // Limita il risultato a una sola entrata
+          .collection('Entrate')
+          .where('dipendenteEntr', isEqualTo: dipendenteId)
+          .where('data', isEqualTo: dataCorrente) // Filtra per data corrente
+          .where('chiuso', isEqualTo: false) // Filtra per le entrate aperte
+          .orderBy('ora', descending: true) // Ordina per ora decrescente
+          .limit(1) // Prendi solo l'ultima entrata aperta
           .get();
 
-      // Controlla se ci sono risultati
+      // Se c'è almeno un documento (entrata aperta trovata)
       if (querySnapshot.docs.isNotEmpty) {
-        // Prendi l'ID dell'entrata
-        final entrataId = querySnapshot.docs.first.id;
+        final entrataId = querySnapshot.docs.first.data()['id'] as int;
         print('Entrata aperta trovata: $entrataId');
-        return int.tryParse(entrataId); // Restituisce l'ID come numero
+        return entrataId; // Restituisci l'ID dell'entrata aperta
       } else {
-        print('Nessuna entrata aperta trovata per dipendente ID $dipendenteId');
-        return null;
+        print('checkentrata : Nessuna entrata aperta trovata per dipendente ID $dipendenteId');
+        return null; // Nessuna entrata aperta trovata
       }
     } catch (e) {
       print('Errore nel metodo checkEntrataAperta: $e');
-      return null;
+      return null; // Gestione degli errori
     }
   }
+
 
   // Registra un'uscita
   static Future<bool> registraUscita(int dipendenteId) async {
@@ -88,13 +89,13 @@ class FirebaseDatabaseHelper {
       final entrataAperta = await checkEntrataAperta(dipendenteId);
       final int id = await FirestoreAutoIncrement.getNextId('usciteId');
       if (entrataAperta == null) {
-        print("Nessuna entrata aperta trovata per registrare l'uscita.");
+        print("Uscita : Nessuna entrata aperta trovata per registrare l'uscita.");
         return false;
       }
 
-      final entrataId = entrataAperta;
       final dataOraCorrente = DateTime.now();
-      final data = "${dataOraCorrente.year}-${dataOraCorrente.month}-${dataOraCorrente.day}";
+      final entrataId = entrataAperta;
+      final String data = DateFormat("yyyy-MM-dd").format(DateTime.now()).toString();
       final ora = "${dataOraCorrente.hour}:${dataOraCorrente.minute}";
 
       // Registra l'uscita
@@ -103,6 +104,7 @@ class FirebaseDatabaseHelper {
         'data': data,
         'ora': ora,
         'entrataId': entrataId,
+        'uscitaId' : id,
       });
 
       // Aggiorna lo stato dell'entrata per chiuderla
@@ -138,29 +140,32 @@ class FirebaseDatabaseHelper {
 
   static Future<Map<String, dynamic>?> getUltimaEntrataAperta(int dipendenteId) async {
     try {
-      // Ottieni tutte le entrate per il dipendente specificato
-      print(dipendenteId);
-      final entrateSnapshot = await _firestore
-          .collection('entrate')
-          .where('dipendenteEntr', isEqualTo: dipendenteId)
-          .where('uscitaId', isEqualTo: null) // Filtra per le entrate che non hanno uscita
-          .orderBy('data', descending: true)
-          .limit(1) // Prendi solo l'ultima entrata
+      // Query Firestore per trovare l'ultima entrata aperta
+      final querySnapshot = await _firestore
+          .collection('Entrate')
+          .where('dipendenteEntr', isEqualTo: dipendenteId) // Filtra per dipendente
+          .where('uscitaId', isEqualTo: null) // Filtra per entrate senza uscita collegata
+          .orderBy('data', descending: true) // Ordina per data in ordine decrescente
+          .limit(1) // Prendi solo il primo documento
           .get();
 
-      // Controllo del risultato della query
-      if (entrateSnapshot.docs.isNotEmpty) {
-        print("Entrata aperta trovata");
-        return entrateSnapshot.docs.first.data(); // Restituisci i dati dell'entrata
+      // Se troviamo un'entrata aperta
+      if (querySnapshot.docs.isNotEmpty) {
+        final document = querySnapshot.docs.first;
+        return {
+          'id': document.id, // ID del documento
+          ...document.data(), // Dati dell'entrata
+        };
       } else {
-        print("Nessuna entrata aperta trovata");
-        return null; // Nessuna entrata aperta trovata
+        print('Nessuna entrata aperta trovata per dipendente ID $dipendenteId');
+        return null;
       }
     } catch (e) {
-      print("Errore durante il recupero dell'ultima entrata aperta: $e");
+      print('Errore nel metodo getUltimaEntrataAperta: $e');
       return null; // In caso di errore
     }
   }
+
 
   // Recupera i log di entrate/uscite per un dipendente
   static Future<List<Map<String, dynamic>>> getLogEntrateUscite(
@@ -201,9 +206,12 @@ class FirebaseDatabaseHelper {
       return [];  // In caso di errore, ritorna una lista vuota
     }
   }
-  static Future<bool> updateEntrataById(int entrataId, Map<String, dynamic> updates) async {
+  static Future<bool> updateEntrataById(int entrataId, String update) async {
     try {
-      await _entrateCollection.doc(entrataId.toString()).update(updates);
+      await _entrateCollection.doc(entrataId.toString()).update({
+        'data' : update,
+      }
+      );
       print("Entrata aggiornata con successo.");
       return true;
     } catch (e) {
@@ -235,7 +243,7 @@ class FirebaseDatabaseHelper {
     }
   }
   static Future<bool> updateEntrataTime(int entrataId, String nuovaOra) async {
-    return await updateEntrataById(entrataId, {'ora': nuovaOra});
+    return await updateEntrataById(entrataId,  nuovaOra);
   }
   static Future<void> updateUscitaById(int uscitaId, String nuovaOra) async {
     try {
@@ -285,19 +293,26 @@ class FirebaseDatabaseHelper {
       return [];
     }
   }
-  static Future<Map<String, dynamic>?> getUsciteByEntrataId(int entrataId) async {
+
+  static Future<List<Map<String, dynamic>>> getUsciteByEntrataId(int entrataId) async {
     try {
-      final querySnapshot = await _usciteCollection
+      // Otteniamo i documenti dalla collezione 'uscite' filtrando per 'entrataId'
+      final querySnapshot = await _firestore
+          .collection('uscite')
           .where('entrataId', isEqualTo: entrataId)
-          .limit(1)
           .get();
 
-      return querySnapshot.docs.isNotEmpty ? querySnapshot.docs.first.data() as Map<String, dynamic> : null;
+      // Convertiamo i documenti ottenuti in una lista di Map
+      final uscite = querySnapshot.docs.map((doc) => doc.data()).toList();
+
+      print('Uscite trovate per entrataId $entrataId: $uscite');
+      return uscite;
     } catch (e) {
-      print("Errore durante il recupero dell'uscita per ID entrata: $e");
-      return null;
+      print('Errore durante il recupero delle uscite per entrataId $entrataId: $e');
+      return [];
     }
   }
+
   static Future<bool> addUscitaByData(int dipendenteId, String data, String ora) async {
     try {
       final entrataAperta = await checkEntrataAperta(dipendenteId);
@@ -343,6 +358,27 @@ class FirebaseDatabaseHelper {
       return false;
     }
   }
+
+  static Future<List<Map<String, dynamic>>> getEntrate(int dipendenteId) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('Entrate')
+          .where('dipendenteEntr', isEqualTo: dipendenteId)
+          .orderBy('data', descending: true)
+          .get();
+
+      List<Map<String, dynamic>> entrateList = [];
+      for (var doc in querySnapshot.docs) {
+        entrateList.add(doc.data());
+      }
+
+      return entrateList;
+    } catch (e) {
+      print("Errore durante il recupero delle entrate su Firebase: $e");
+      return [];
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> getEntryExitLogs(int dipendenteId) async {
     try {
       final entrateSnapshot = await _entrateCollection
