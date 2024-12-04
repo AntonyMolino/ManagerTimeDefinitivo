@@ -36,7 +36,7 @@ class HomePage extends StatelessWidget {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => LoginScreen()),
-                    (route) => false, // Rimuove tutte le schermate precedenti
+                (route) => false, // Rimuove tutte le schermate precedenti
               );
               print('Utente uscito');
             },
@@ -148,16 +148,17 @@ class EntryExitSection extends StatelessWidget {
   Future<int> calcolaOreLavorate() async {
     List<Map<String, dynamic>> logs =
         await FirebaseDatabaseHelper.getLogEntrateUscite(codiceFiscale);
-        await FirebaseDatabaseHelper.getLogEntrateUscite(codiceFiscale);
     int oreLavorate = 0;
 
     for (var log in logs) {
       if (log['oraEntrata'] != null &&
           log['oraUscita'] != null &&
           log['data'] != null) {
-        DateTime entrata =
-            DateTime.parse('${log['data']}T${log['oraEntrata']}');
+        DateTime entrata = DateTime.parse('${log['data']}T${log['oraEntrata']}');
         DateTime uscita = DateTime.parse('${log['data']}T${log['oraUscita']}');
+        print(entrata);
+        print(uscita);
+
         oreLavorate += uscita.difference(entrata).inHours;
       }
     }
@@ -235,16 +236,21 @@ class EntryExitSection extends StatelessWidget {
                                 Timer? timer;
 
                                 return StatefulBuilder(
-                                  builder: (BuildContext context, StateSetter setState) {
+                                  builder: (BuildContext context,
+                                      StateSetter setState) {
                                     // Avvio del timer solo se non è già stato avviato
                                     if (timer == null) {
-                                      timer = Timer.periodic(Duration(milliseconds: 200), (Timer t) {
+                                      timer = Timer.periodic(
+                                          Duration(milliseconds: 200),
+                                          (Timer t) {
                                         if (progress >= 1.0) {
                                           t.cancel();
                                           // Chiude il dialogo e restituisce `true`
                                           if (context.mounted) {
                                             LoginScreen().createState();
-                                            Navigator.of(context, rootNavigator: true).pop(true);
+                                            Navigator.of(context,
+                                                    rootNavigator: true)
+                                                .pop(true);
                                           }
                                         } else {
                                           setState(() {
@@ -265,13 +271,17 @@ class EntryExitSection extends StatelessWidget {
                                         children: [
                                           Text(
                                             'Entrata registrata con successo!',
-                                            style: TextStyle(color: Colors.white),
+                                            style:
+                                                TextStyle(color: Colors.white),
                                           ),
                                           SizedBox(height: 20),
                                           LinearProgressIndicator(
                                             value: progress,
-                                            backgroundColor: Colors.white.withOpacity(0.3),
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            backgroundColor:
+                                                Colors.white.withOpacity(0.3),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
                                           ),
                                         ],
                                       ),
@@ -281,13 +291,14 @@ class EntryExitSection extends StatelessWidget {
                               },
                             );
 
-
                             if (result == true) {
                               if (!context.mounted) return;
                               Navigator.pushAndRemoveUntil(
                                 context,
-                                MaterialPageRoute(builder: (context) => LoginScreen()),
-                                    (route) => false, // Rimuove tutte le schermate precedenti
+                                MaterialPageRoute(
+                                    builder: (context) => LoginScreen()),
+                                (route) =>
+                                    false, // Rimuove tutte le schermate precedenti
                               );
                             }
                           } else {
@@ -299,15 +310,20 @@ class EntryExitSection extends StatelessWidget {
                                 Timer? timer;
                                 // StatefulBuilder per aggiornare dinamicamente la UI del dialogo
                                 return StatefulBuilder(
-                                  builder: (BuildContext context, StateSetter setState) {
+                                  builder: (BuildContext context,
+                                      StateSetter setState) {
                                     // Avvio del timer solo se non è già stato avviato
                                     if (timer == null) {
-                                      timer = Timer.periodic(Duration(milliseconds: 200), (Timer t) {
+                                      timer = Timer.periodic(
+                                          Duration(milliseconds: 200),
+                                          (Timer t) {
                                         if (progress >= 1.0) {
                                           t.cancel();
                                           // Chiude il dialogo e restituisce `true`
                                           if (context.mounted) {
-                                            Navigator.of(context, rootNavigator: true).pop(true);
+                                            Navigator.of(context,
+                                                    rootNavigator: true)
+                                                .pop(true);
                                           }
                                         } else {
                                           setState(() {
@@ -353,8 +369,10 @@ class EntryExitSection extends StatelessWidget {
                               if (!context.mounted) return;
                               Navigator.pushAndRemoveUntil(
                                 context,
-                                MaterialPageRoute(builder: (context) => LoginScreen()),
-                                    (route) => false, // Rimuove tutte le schermate precedenti
+                                MaterialPageRoute(
+                                    builder: (context) => LoginScreen()),
+                                (route) =>
+                                    false, // Rimuove tutte le schermate precedenti
                               );
                             }
                           }
@@ -373,15 +391,20 @@ class EntryExitSection extends StatelessWidget {
                                 Timer? timer;
 
                                 return StatefulBuilder(
-                                  builder: (BuildContext context, StateSetter setState) {
+                                  builder: (BuildContext context,
+                                      StateSetter setState) {
                                     // Avvio del timer solo se non è già stato avviato
                                     if (timer == null) {
-                                      timer = Timer.periodic(Duration(milliseconds: 200), (Timer t) {
+                                      timer = Timer.periodic(
+                                          Duration(milliseconds: 200),
+                                          (Timer t) {
                                         if (progress >= 1.0) {
                                           t.cancel();
                                           // Chiude il dialogo e restituisce `true`
                                           if (context.mounted) {
-                                            Navigator.of(context, rootNavigator: true).pop(true);
+                                            Navigator.of(context,
+                                                    rootNavigator: true)
+                                                .pop(true);
                                           }
                                         } else {
                                           setState(() {
@@ -416,14 +439,11 @@ class EntryExitSection extends StatelessWidget {
                                                     style: TextStyle(
                                                         color: Colors.white));
                                               } else if (snapshot.hasData) {
-                                                int oreLavorate =
-                                                    snapshot.data!;
-                                                double percentualeLavorata =
-                                                    (oreLavorate / oreTotali) *
-                                                        100;
-                                                double percentualeNonLavorata =
-                                                    100 - percentualeLavorata;
-
+                                                print("snapshot presente");
+                                                int oreLavorate = snapshot.data!;
+                                                double percentualeLavorata = (oreLavorate / oreTotali) * 100;
+                                                double percentualeNonLavorata = 100 - percentualeLavorata;
+                                                print("percentuale lavorata : $percentualeLavorata , percentuale non lavorata $percentualeNonLavorata");
                                                 return Column(
                                                   children: [
                                                     Container(
@@ -536,8 +556,10 @@ class EntryExitSection extends StatelessWidget {
                               if (!context.mounted) return;
                               Navigator.pushAndRemoveUntil(
                                 context,
-                                MaterialPageRoute(builder: (context) => LoginScreen()),
-                                    (route) => false, // Rimuove tutte le schermate precedenti
+                                MaterialPageRoute(
+                                    builder: (context) => LoginScreen()),
+                                (route) =>
+                                    false, // Rimuove tutte le schermate precedenti
                               );
                             }
                           } else {
@@ -698,7 +720,6 @@ class HoursWorkedSection extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
-
                 Center(
                   child: Text(
                     'Ore lavorate totali: $oreLavorate  ore',
@@ -755,7 +776,7 @@ class EntryExitLogsSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: getLogs(),  // La funzione getLogs recupera i log
+              future: getLogs(), // La funzione getLogs recupera i log
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -768,18 +789,21 @@ class EntryExitLogsSection extends StatelessWidget {
 
                   return ListView.builder(
                     physics: NeverScrollableScrollPhysics(),
-                    shrinkWrap: true, // Risolve il problema di overflow con i log
+                    shrinkWrap:
+                        true, // Risolve il problema di overflow con i log
                     itemCount: logs.length,
                     itemBuilder: (context, index) {
                       var log = logs[index];
                       var data = DateTime.parse(log['data']);
-                      var dataDef = DateFormat('dd-MM-yyyy').format(data).toString();
+                      var dataDef =
+                          DateFormat('dd-MM-yyyy').format(data).toString();
                       return Card(
                         margin: EdgeInsets.symmetric(vertical: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 4,  // Aggiungi ombra per creare un effetto di profondità
+                        elevation:
+                            4, // Aggiungi ombra per creare un effetto di profondità
                         child: ListTile(
                           contentPadding: EdgeInsets.all(16),
                           title: Text(dataDef),
@@ -792,9 +816,9 @@ class EntryExitLogsSection extends StatelessWidget {
                               Text(
                                 'Uscita: ${log['oraUscita'] ?? 'Non registrata'}',
                                 style: TextStyle(
-                                  color: log['oraUscita'] == null
-                                      ? Colors.red : null
-                                ),
+                                    color: log['oraUscita'] == null
+                                        ? Colors.red
+                                        : null),
                               ),
                             ],
                           ),
