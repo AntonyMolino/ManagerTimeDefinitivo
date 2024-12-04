@@ -793,8 +793,7 @@ class EntryExitLogsSection extends StatelessWidget {
                                 'Uscita: ${log['oraUscita'] ?? 'Non registrata'}',
                                 style: TextStyle(
                                   color: log['oraUscita'] == null
-                                      ? Colors.red
-                                      : Colors.green,
+                                      ? Colors.red : null
                                 ),
                               ),
                             ],
