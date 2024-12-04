@@ -746,14 +746,16 @@ class EntryExitLogsSection extends StatelessWidget {
         children: [
           // Titolo della sezione
           Center(
-            child: Text('Log Entrate/Uscite',
-                style: Theme.of(context).textTheme.headlineSmall),
+            child: Text(
+              'Log Entrate/Uscite',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
           ),
           SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: getLogs(),
+              future: getLogs(),  // La funzione getLogs recupera i log
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -763,31 +765,47 @@ class EntryExitLogsSection extends StatelessWidget {
                   return Center(child: Text('Nessun log trovato.'));
                 } else {
                   List<Map<String, dynamic>> logs = snapshot.data!;
+
                   return ListView.builder(
                     physics: NeverScrollableScrollPhysics(),
-                    shrinkWrap:
-                        true, // Risolve il problema di overflow con i log
+                    shrinkWrap: true, // Risolve il problema di overflow con i log
                     itemCount: logs.length,
                     itemBuilder: (context, index) {
                       var log = logs[index];
                       var data = DateTime.parse(log['data']);
-                      var dataDef =
-                          DateFormat('dd-MM-yyyy').format(data).toString();
+                      var dataDef = DateFormat('dd-MM-yyyy').format(data).toString();
                       return Card(
                         margin: EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,  // Aggiungi ombra per creare un effetto di profondità
                         child: ListTile(
                           contentPadding: EdgeInsets.all(16),
                           title: Text(dataDef),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Mostra orario entrata
                               Text('Entrata: ${log['oraEntrata']}'),
+                              // Mostra uscita o messaggio "Non registrata"
                               Text(
-                                  'Uscita: ${log['oraUscita'] ?? 'Non registrata'}'),
+                                'Uscita: ${log['oraUscita'] ?? 'Non registrata'}',
+                                style: TextStyle(
+                                  color: log['oraUscita'] == null
+                                      ? Colors.red
+                                      : Colors.green,
+                                ),
+                              ),
                             ],
                           ),
-                          trailing:
+                          trailing: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              // Mostra codice fiscale
                               Text('Codice Fiscale: ${log['codiceFiscale']}'),
+                            ],
+                          ),
                         ),
                       );
                     },
