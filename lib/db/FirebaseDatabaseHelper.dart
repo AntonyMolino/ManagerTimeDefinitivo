@@ -144,7 +144,7 @@ class FirebaseDatabaseHelper {
       final querySnapshot = await _firestore
           .collection('Entrate')
           .where('dipendenteEntr', isEqualTo: dipendenteId) // Filtra per dipendente
-          .where('uscitaId', isEqualTo: null) // Filtra per entrate senza uscita collegata
+          .where('uscitaId', isNull: true) // Filtra per entrate senza uscita collegata
           .orderBy('data', descending: true) // Ordina per data in ordine decrescente
           .limit(1) // Prendi solo il primo documento
           .get();
@@ -168,48 +168,73 @@ class FirebaseDatabaseHelper {
 
 
   // Recupera i log di entrate/uscite per un dipendente
-  static Future<List<Map<String, dynamic>>> getLogEntrateUscite(
-      String codiceFiscale) async {
+  static Future<List<Map<String, dynamic>>> getLogEntrateUscite(String codiceFiscale) async {
     try {
-      // Recupero le entrate del dipendente in base al codice fiscale
-      final querySnapshot = await _entrateCollection
-          .where('codiceFiscale', isEqualTo: codiceFiscale)  // Filtra per codice fiscale
-          .orderBy('data', descending: true)
+      // Recupera il documento del dipendente utilizzando il codice fiscale
+      var dipendenteQuery = await FirebaseFirestore.instance
+          .collection('dipendenti')
+          .where('codiceFiscale', isEqualTo: codiceFiscale)
           .get();
 
-      final logs = <Map<String, dynamic>>[];
+      if (dipendenteQuery.docs.isEmpty) {
+        // Se non viene trovato il dipendente, restituisci un elenco vuoto
+        return [];
+      }
 
-      // Itera sui documenti delle entrate recuperati
-      for (final doc in querySnapshot.docs) {
-        final uscitaId = doc['uscitaId'];  // Recupera l'uscitaId associato all'entrata
-        Map<String, dynamic>? uscita;
+      // Ottieni l'ID del dipendente
+      var dipendenteDoc = dipendenteQuery.docs.first;
+      int dipendenteId = dipendenteDoc['id'];
 
-        // Se esiste un uscitaId, recupera il documento delle uscite
-        if (uscitaId != null) {
-          final uscitaSnapshot = await _usciteCollection.doc(uscitaId).get();
+      // Data corrente
+      var now = DateTime.now();
+      String currentYear = DateFormat('yyyy').format(now);
+      DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));  // Inizio della settimana
+      DateTime endOfWeek = startOfWeek.add(Duration(days: 6));  // Fine della settimana
 
-          if (uscitaSnapshot.exists) {
-            uscita = uscitaSnapshot.data() as Map<String, dynamic>?;
-          }
-        }
+      // Recupera tutte le entrate per il dipendente
+      var entrateQuery = await FirebaseFirestore.instance
+          .collection('Entrate')
+          .where('dipendenteEntr', isEqualTo: dipendenteId)
+          .where('data', isGreaterThanOrEqualTo: startOfWeek)
+          .where('data', isLessThanOrEqualTo: endOfWeek)
+          .orderBy('data')
+          .get();
 
-        // Aggiungi al log le informazioni dell'entrata e della sua uscita corrispondente
-        logs.add({
-          'entrata': doc.data(),
-          'uscita': uscita ?? {},  // Usa un oggetto vuoto se l'uscita è null
+      List<Map<String, dynamic>> logEntrateUscite = [];
+
+      // Recupera le uscite per ogni entrata
+      for (var entrataDoc in entrateQuery.docs) {
+        var uscitaQuery = await FirebaseFirestore.instance
+            .collection('Uscite')
+            .where('entrataId', isEqualTo: entrataDoc['id'])
+            .get();
+
+        var uscitaDoc = uscitaQuery.docs.isNotEmpty ? uscitaQuery.docs.first : null;
+
+        // Prepara i dati da restituire
+        logEntrateUscite.add({
+          'id': entrataDoc['id'],
+          'dipendenteEntr': entrataDoc['dipendenteEntr'],
+          'oraEntrata': entrataDoc['ora'],
+          'data': entrataDoc['data'],
+          'uscitaId': uscitaDoc != null ? uscitaDoc['id'] : null,
+          'oraUscita': uscitaDoc != null ? uscitaDoc['ora'] : null,
+          'codiceFiscale': dipendenteDoc['codiceFiscale'],
+          'nome': dipendenteDoc['nome'],
+          'cognome': dipendenteDoc['cognome'],
         });
       }
 
-      return logs;  // Ritorna il log
+      return logEntrateUscite;
     } catch (e) {
-      print("Errore durante il recupero dei log: $e");
-      return [];  // In caso di errore, ritorna una lista vuota
+      print('Errore durante il recupero dei log di entrate/uscite: $e');
+      return [];
     }
   }
   static Future<bool> updateEntrataById(int entrataId, String update) async {
     try {
       await _entrateCollection.doc(entrataId.toString()).update({
-        'data' : update,
+        'ora' : update,
       }
       );
       print("Entrata aggiornata con successo.");
@@ -247,7 +272,7 @@ class FirebaseDatabaseHelper {
   }
   static Future<void> updateUscitaById(int uscitaId, String nuovaOra) async {
     try {
-      await _firestore.collection('uscite').doc(uscitaId.toString()).update({
+      await _firestore.collection('Uscite').doc(uscitaId.toString()).update({
         'ora': nuovaOra,
       });
       print("Ora dell'uscita aggiornata con successo!");
@@ -294,24 +319,34 @@ class FirebaseDatabaseHelper {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getUsciteByEntrataId(int entrataId) async {
+  static Future<Map<String, dynamic>?> getUscitaByEntrataId(int entrataId) async {
+    if (entrataId <= 0) {
+      print("ID entrata non valido.");
+      return null;
+    }
     try {
-      // Otteniamo i documenti dalla collezione 'uscite' filtrando per 'entrataId'
       final querySnapshot = await _firestore
-          .collection('uscite')
+          .collection('Uscite')
           .where('entrataId', isEqualTo: entrataId)
+          .limit(1) // Limitiamo a una sola uscita
           .get();
 
-      // Convertiamo i documenti ottenuti in una lista di Map
-      final uscite = querySnapshot.docs.map((doc) => doc.data()).toList();
-
-      print('Uscite trovate per entrataId $entrataId: $uscite');
-      return uscite;
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        return {
+          'id': doc.id, // Include l'ID del documento
+          ...doc.data(), // Include i dati
+        };
+      } else {
+        print("Nessuna uscita trovata per entrataId $entrataId.");
+        return null;
+      }
     } catch (e) {
-      print('Errore durante il recupero delle uscite per entrataId $entrataId: $e');
-      return [];
+      print('Errore durante il recupero delle uscite: $e');
+      return null;
     }
   }
+
 
   static Future<bool> addUscitaByData(int dipendenteId, String data, String ora) async {
     try {
@@ -338,6 +373,8 @@ class FirebaseDatabaseHelper {
       return false;
     }
   }
+
+
   static Future<bool> deleteEntrataById(int entrataId) async {
     try {
       await _entrateCollection.doc(entrataId.toString()).delete();
@@ -360,6 +397,10 @@ class FirebaseDatabaseHelper {
   }
 
   static Future<List<Map<String, dynamic>>> getEntrate(int dipendenteId) async {
+    if (dipendenteId <= 0) {
+      print("ID dipendente non valido.");
+      return [];
+    }
     try {
       final querySnapshot = await _firestore
           .collection('Entrate')
@@ -367,17 +408,16 @@ class FirebaseDatabaseHelper {
           .orderBy('data', descending: true)
           .get();
 
-      List<Map<String, dynamic>> entrateList = [];
-      for (var doc in querySnapshot.docs) {
-        entrateList.add(doc.data());
-      }
-
-      return entrateList;
+      return querySnapshot.docs.map((doc) => {
+        'id': doc.id, // Include anche l'ID del documento
+        ...doc.data(), // Include i dati
+      }).toList();
     } catch (e) {
-      print("Errore durante il recupero delle entrate su Firebase: $e");
+      print("Errore durante il recupero delle entrate: $e");
       return [];
     }
   }
+
 
   static Future<List<Map<String, dynamic>>> getEntryExitLogs(int dipendenteId) async {
     try {

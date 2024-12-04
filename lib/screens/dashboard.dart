@@ -706,61 +706,6 @@ class HoursWorkedSection extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 10),
-                // Assicurati di fornire una dimensione al PieChart per evitare errori
-                // Container(
-                //   width: double.infinity,  // Imposta la larghezza al 100% del contenitore genitore
-                //   height: 200,  // Imposta un'altezza fissa per il PieChart
-                //   child: PieChart(
-                //     PieChartData(
-                //
-                //       sections: [
-                //         PieChartSectionData(
-                //           value: percentualeLavorata,
-                //           title: '${percentualeLavorata.toStringAsFixed(1)}%',
-                //           color: Colors.indigo,
-                //           radius: 50,
-                //           titleStyle: TextStyle(
-                //             color: Colors.white,
-                //             fontSize: 16,
-                //             fontWeight: FontWeight.bold,
-                //           ),
-                //         ),
-                //         PieChartSectionData(
-                //           value: percentualeNonLavorata,
-                //           title: '${percentualeNonLavorata.toStringAsFixed(1)}%',
-                //           color: Colors.red,
-                //           radius: 50,
-                //           titleStyle: TextStyle(
-                //             color: Colors.white,
-                //             fontSize: 16,
-                //             fontWeight: FontWeight.bold,
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                // ),
-                // SizedBox(height: 10),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.center,
-                //   children: [
-                //     Container(
-                //       width: 20,
-                //       height: 20,
-                //       color: Colors.indigo, // Colore delle ore lavorate
-                //     ),
-                //     SizedBox(width: 8),
-                //     Text('Ore Lavorate', style: TextStyle(fontSize: 16)),
-                //     SizedBox(width: 20),
-                //     Container(
-                //       width: 20,
-                //       height: 20,
-                //       color: Colors.red, // Colore delle ore non lavorate
-                //     ),
-                //     SizedBox(width: 8),
-                //     Text('Ore non lavorate', style: TextStyle(fontSize: 16)),
-                //   ],
-                // ),
               ],
             ),
           );

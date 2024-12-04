@@ -27,21 +27,28 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   Future<void> _fetchEntrateUscite() async {
-    List<Map<String, dynamic>> entrate =
-    await FirebaseDatabaseHelper.getEntrate(widget.id);
+    // Recupera tutte le entrate per il dipendente
+    List<Map<String, dynamic>> entrate = await FirebaseDatabaseHelper.getEntrate(widget.id);
+
+    // Crea una lista vuota per le uscite
     List<Map<String, dynamic>> uscite = [];
+
+    // Recupera le uscite per ogni entrata, se esistono
     for (var entrata in entrate) {
-      var uscita = await FirebaseDatabaseHelper.getUsciteByEntrataId(entrata['id']);
-      if (uscita.isNotEmpty) {
-        uscite.add(uscita[0]);
+      var uscita = await FirebaseDatabaseHelper.getUscitaByEntrataId(entrata['id']);
+      if (uscita != null) {
+        uscite.add(uscita);
+        print("Uscita trovata per entrata ${entrata['id']}: $uscita");
       } else {
         uscite.add({});
+        print("Nessuna uscita trovata per entrata ${entrata['id']}");
       }
     }
 
-    List<Map<String, dynamic>> dipendenti =
-    await Dipendente.getDipendenteById(widget.id);
+    // Recupera i dettagli del dipendente
+    List<Map<String, dynamic>> dipendenti = await Dipendente.getDipendenteById(widget.id);
 
+    // Aggiorna lo stato con i dati recuperati
     setState(() {
       _entrate = entrate;
       _uscite = uscite;
@@ -106,23 +113,27 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             ),
             TextButton(
               onPressed: () async {
+                // Converte entrata['id'] in int (se necessario)
+                int entrataId = int.parse(entrata['id'].toString());
+
+                // Aggiorna l'entrata
                 await FirebaseDatabaseHelper.updateEntrataById(
-                  entrata['id'],
-                  entrataController.text,
+                  entrataId,
+                  entrataController.text, // Ora entrata aggiornata
                 );
-                if (uscita == null) {
-                  await FirebaseDatabaseHelper.addUscitaByData(
-                    entrata['data'],
-                    uscitaController.text,
-                    entrata['id'],
-                  );
-                } else {
+
+                if (uscita != null){
+                  // Converte uscita['id'] in int (se necessario)
+                  int uscitaId = int.parse(uscita['id'].toString());
+
+                  // Aggiorna l'uscita esistente
                   await FirebaseDatabaseHelper.updateUscitaById(
-                    uscita['id'],
-                    uscitaController.text,
+                    uscitaId,
+                    uscitaController.text, // Ora uscita aggiornata
                   );
                 }
-                await _fetchEntrateUscite();
+
+                await _fetchEntrateUscite(); // Ricarica i dati
                 Navigator.of(context).pop();
               },
               child: Text('Salva'),
@@ -133,14 +144,14 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
     );
   }
 
+
   void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('Conferma Eliminazione'),
-          content: Text(
-              'Sei sicuro di voler eliminare questa entrata e la relativa uscita?'),
+          content: Text('Sei sicuro di voler eliminare questa entrata e la relativa uscita?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -165,10 +176,31 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
   @override
   Widget build(BuildContext context) {
+    print("Entrate disponibili: $_entrate");
+    print("Uscite disponibili: $_uscite");
+    print("Valore _startDate: $_startDate");
+    print("Valore _endDate: $_endDate");
+
     List<Map<String, dynamic>> filteredEntrate = _entrate.where((entrata) {
-      DateTime entrataDate = DateTime.parse("${entrata['data']} ${entrata['ora']}");
+      // Verifica che 'data' e 'ora' siano presenti
+      if (entrata['data'] == null || entrata['ora'] == null) return false;
+
+      DateTime? entrataDate;
+      try {
+        // Parsing della data e dell'ora
+        String data = entrata['data']; // Esempio: "2024-12-01"
+        String ora = entrata['ora'];   // Esempio: "14:30"
+        DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm");
+        entrataDate = dateFormat.parse("$data $ora");
+      } catch (e) {
+        print("Errore nel parsing della data/ora: $e");
+        return false; // Ignora l'elemento se il parsing fallisce
+      }
+
+      // Applica i filtri di intervallo
       if (_startDate != null && entrataDate.isBefore(_startDate!)) return false;
       if (_endDate != null && entrataDate.isAfter(_endDate!)) return false;
+
       return true;
     }).toList();
 
