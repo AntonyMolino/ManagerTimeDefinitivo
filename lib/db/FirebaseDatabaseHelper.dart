@@ -406,8 +406,9 @@ class FirebaseDatabaseHelper {
 
 
   static Future<bool> deleteEntrataById(int entrataId) async {
+    String s = entrataId.toString();
     try {
-      await _entrateCollection.doc(entrataId.toString()).delete();
+      await _entrateCollection.doc(s).delete();
       print("Entrata eliminata con successo.");
       return true;
     } catch (e) {
@@ -416,8 +417,9 @@ class FirebaseDatabaseHelper {
     }
   }
   static Future<bool> deleteUscitaById(int uscitaId) async {
+    String s = uscitaId.toString();
     try {
-      await _usciteCollection.doc(uscitaId.toString()).delete();
+      await _usciteCollection.doc(s).delete();
       print("Uscita eliminata con successo.");
       return true;
     } catch (e) {

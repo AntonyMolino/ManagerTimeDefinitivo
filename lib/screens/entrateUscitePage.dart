@@ -65,10 +65,8 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
   }
 
   void _editEntry(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
-    TextEditingController entrataController =
-    TextEditingController(text: entrata['ora']);
-    TextEditingController uscitaController =
-    TextEditingController(text: uscita != null ? uscita['ora'] : '');
+    TextEditingController entrataController = TextEditingController(text: entrata['ora']);
+    TextEditingController uscitaController = TextEditingController(text: uscita != null ? uscita['ora'] : '');
 
     showDialog(
       context: context,
@@ -113,7 +111,6 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             ),
             TextButton(
               onPressed: () async {
-                // Converte entrata['id'] in int (se necessario)
                 int entrataId = int.parse(entrata['id'].toString());
 
                 // Aggiorna l'entrata
@@ -122,8 +119,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                   entrataController.text, // Ora entrata aggiornata
                 );
 
-                if (uscita != null){
-                  // Converte uscita['id'] in int (se necessario)
+                if (uscita != null) {
                   int uscitaId = int.parse(uscita['id'].toString());
 
                   // Aggiorna l'uscita esistente
@@ -133,8 +129,12 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                   );
                 }
 
-                await _fetchEntrateUscite(); // Ricarica i dati
-                Navigator.of(context).pop();
+                // Ricarica i dati
+                setState(() {
+                  _fetchEntrateUscite();  // Ricarica le entrate e uscite
+                });
+
+                Navigator.of(context).pop();  // Chiudi il dialog
               },
               child: Text('Salva'),
             ),
@@ -143,6 +143,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       },
     );
   }
+
 
 
   void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
@@ -163,8 +164,13 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
                 if (uscita != null) {
                   await FirebaseDatabaseHelper.deleteUscitaById(uscita['id']);
                 }
-                await _fetchEntrateUscite();
-                Navigator.of(context).pop();
+
+                // Ricarica i dati dopo l'eliminazione
+                setState(() {
+                  _fetchEntrateUscite();  // Ricarica le entrate e uscite
+                });
+
+                Navigator.of(context).pop();  // Chiudi il dialog
               },
               child: Text('Elimina'),
             ),
@@ -173,6 +179,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -58,6 +58,7 @@ class Dipendente {
         'cognome': cognome,
         'email': email,
         'codiceFiscale': codiceFiscale,
+        'registato ' : false,
       });
       print("Dipendente aggiunto con successo!");
     } catch (e) {
