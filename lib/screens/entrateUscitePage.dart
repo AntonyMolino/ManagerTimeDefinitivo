@@ -147,6 +147,7 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
 
 
   void _confirmDelete(Map<String, dynamic> entrata, Map<String, dynamic>? uscita) {
+    print(uscita);
     showDialog(
       context: context,
       builder: (context) {
@@ -161,9 +162,9 @@ class _EntrateUscitePageState extends State<EntrateUscitePage> {
             TextButton(
               onPressed: () async {
                 await FirebaseDatabaseHelper.deleteEntrataById(entrata['id']);
-                if (uscita != null) {
-                  await FirebaseDatabaseHelper.deleteUscitaById(uscita['id']);
-                }
+                String s = uscita!['id'];
+                await FirebaseDatabaseHelper.deleteUscitaById(s);
+
 
                 // Ricarica i dati dopo l'eliminazione
                 setState(() {

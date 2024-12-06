@@ -416,10 +416,13 @@ class FirebaseDatabaseHelper {
       return false;
     }
   }
-  static Future<bool> deleteUscitaById(int uscitaId) async {
-    String s = uscitaId.toString();
+  
+
+  static Future<bool> deleteUscitaById(String uscitaId) async {
+
+
     try {
-      await _usciteCollection.doc(s).delete();
+      await _usciteCollection.doc(uscitaId).delete();
       print("Uscita eliminata con successo.");
       return true;
     } catch (e) {
